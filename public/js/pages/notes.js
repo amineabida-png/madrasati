@@ -229,6 +229,9 @@ async function genererBulletin() {
 }
 
 function exportBulletinPDF(nom) {
-  toast('Utilisez Ctrl+P pour imprimer/sauvegarder en PDF', 'info');
-  setTimeout(()=>window.print(), 500);
+  const el = document.getElementById('bulletin-print');
+  if (!el) return toast('Générez un bulletin d abord', 'error');
+  el.classList.add('print-zone');
+  window.print();
+  setTimeout(() => el.classList.remove('print-zone'), 1000);
 }

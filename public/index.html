@@ -381,6 +381,10 @@
       <!-- Injected by JS based on role -->
     </div>
     <div class="sidebar-bottom">
+      <button onclick="openChangePassword()" class="nav-item" style="width:100%; background:none; border:none; text-align:left;">
+        <span class="nav-icon"><i class="fas fa-lock"></i></span>
+        <span>Changer mot de passe</span>
+      </button>
       <button onclick="toggleDark()" class="nav-item" style="width:100%; background:none; border:none; text-align:left;">
         <span class="nav-icon"><i class="fas fa-moon" id="dark-icon"></i></span>
         <span id="dark-label">Mode sombre</span>
@@ -437,3 +441,31 @@
 <script src="/js/app.js"></script>
 </body>
 </html>
+<style id="print-styles">
+@media print {
+  /* Cache tout par défaut */
+  body * { visibility: hidden !important; }
+  #sidebar, #topbar, #trial-banner, .modal-overlay { display: none !important; }
+  
+  /* Montre uniquement l'élément à imprimer */
+  .print-zone, .print-zone * { visibility: visible !important; }
+  .print-zone {
+    position: fixed !important;
+    left: 0 !important; top: 0 !important;
+    width: 100% !important;
+    background: white !important;
+    padding: 20px !important;
+  }
+  
+  /* Cache les boutons dans la zone d'impression */
+  .print-zone .btn, .print-zone button { display: none !important; }
+  
+  /* Facture */
+  #facture-print { visibility: visible !important; }
+  #facture-print * { visibility: visible !important; }
+  
+  /* Bulletin */
+  #bulletin-print { visibility: visible !important; }
+  #bulletin-print * { visibility: visible !important; }
+}
+</style>

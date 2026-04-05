@@ -238,3 +238,42 @@ async function checkTrial() {
 // Check every minute
 setInterval(checkTrial, 60000);
 setTimeout(checkTrial, 2000);
+
+// ─── CHANGEMENT MOT DE PASSE ─────────────────────────────────────────────────
+function openChangePassword() {
+  modal(`
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-lock" style="color:var(--accent);margin-right:8px;"></i>Changer mon mot de passe</div>
+      <button class="btn btn-outline btn-sm btn-icon" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nouveau mot de passe *</label>
+        <input id="pwd-new" class="form-input" type="password" placeholder="Minimum 6 caractères">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirmer le mot de passe *</label>
+        <input id="pwd-confirm" class="form-input" type="password" placeholder="Répétez le mot de passe">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="saveNewPassword()"><i class="fas fa-save"></i> Enregistrer</button>
+    </div>
+  `);
+}
+
+async function saveNewPassword() {
+  const pwd = document.getElementById('pwd-new').value;
+  const confirm = document.getElementById('pwd-confirm').value;
+  if (!pwd || pwd.length < 6) return toast('Mot de passe trop court (min. 6 caractères)', 'error');
+  if (pwd !== confirm) return toast('Les mots de passe ne correspondent pas', 'error');
+  try {
+    loading(true);
+    await API.put(`/api/users/${currentUser.id}/password`, { password: pwd });
+    loading(false);
+    closeModal();
+    toast('Mot de passe changé avec succès ! Reconnectez-vous.');
+    setTimeout(() => logout(), 2000);
+  } catch(err) { loading(false); toast(err.message, 'error'); }
+}
