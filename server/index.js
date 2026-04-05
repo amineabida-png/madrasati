@@ -4,7 +4,7 @@ const cors = require('cors');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { getDB, query, run } = require('./database');
+const { getDB, query, run, resetDB } = require('./database');
 const { authMiddleware, requireRole, SECRET } = require('./auth');
 const { getTrialInfo, trialMiddleware } = require('./trial');
 
@@ -538,8 +538,6 @@ app.get('/admin', (req, res) => {
 // ─── RESET SECRET (usage unique) ─────────────────────────────────────────────
 app.get('/api/reset-db-secret-2026', async (req, res) => {
   try {
-    const { DB_PATH } = require('./database');
-    // Ce chemin n'est pas exporté, on le recalcule
     const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.join(__dirname, '../data');
     const dbPath = path.join(DATA_DIR, 'madrasati.db');
     const trialPath = path.join(DATA_DIR, 'trial.json');
@@ -547,11 +545,12 @@ app.get('/api/reset-db-secret-2026', async (req, res) => {
     if (require('fs').existsSync(dbPath)) require('fs').unlinkSync(dbPath);
     if (require('fs').existsSync(trialPath)) require('fs').unlinkSync(trialPath);
     if (require('fs').existsSync(trialIpsPath)) require('fs').unlinkSync(trialIpsPath);
-    res.json({ ok: true, message: 'Base supprimée. Redémarrez le serveur.' });
-    // Forcer le redémarrage
-    setTimeout(() => process.exit(0), 500);
+    // Réinitialiser le module db en mémoire
+    const dbModule = require('./database');
+    if (dbModule.resetDB) dbModule.resetDB();
+    res.send('<h2 style="font-family:sans-serif;padding:20px;color:green">✅ Base supprimée ! <a href="/">Cliquez ici pour revenir</a></h2>');
   } catch(e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).send('<h2 style="color:red">Erreur: ' + e.message + '</h2>');
   }
 });
 

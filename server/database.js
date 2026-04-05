@@ -361,4 +361,8 @@ function run(sql, params = []) {
   });
 }
 
-module.exports = { getDB, query, run, saveDB };
+function resetDB() {
+  db = null;
+}
+
+module.exports = { getDB, query, run, saveDB, resetDB };
