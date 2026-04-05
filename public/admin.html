@@ -148,9 +148,11 @@ tr:hover td{background:rgba(255,255,255,0.03);}
 let resetUserId = null;
 
 function subBadge(u) {
-  if (u.role === 'super' || u.role === 'demo') return '<span style="font-size:.7rem;color:#475569;">—</span>';
+  if (u.role === 'super') return '<span style="font-size:.7rem;color:#475569;">—</span>';
+  if (u.email === 'demo@madrasati.ma') return '<span style="background:#f59e0b20;color:#f59e0b;padding:3px 8px;font-size:.65rem;border-radius:4px;">⏱ Démo 24h</span>';
   const s = u.subscription;
-  if (!s || s.expired) return '<span style="background:#ef444420;color:#ef4444;padding:3px 8px;font-size:.65rem;border-radius:4px;">❌ EXPIRÉ</span>';
+  if (!s || s.expired || s.daysLeft === 0) return '<span style="background:#ef444420;color:#ef4444;padding:3px 8px;font-size:.65rem;border-radius:4px;">❌ EXPIRÉ</span>';
+  if (s.unlimited) return '<span style="font-size:.7rem;color:#475569;">—</span>';
   if (s.warning) return `<span style="background:#ef444420;color:#ef4444;padding:3px 8px;font-size:.65rem;border-radius:4px;">🔴 ${s.daysLeft}j restants</span>`;
   if (s.attention) return `<span style="background:#f59e0b20;color:#f59e0b;padding:3px 8px;font-size:.65rem;border-radius:4px;">🟡 ${s.daysLeft}j restants</span>`;
   return `<span style="background:#05966920;color:#34d399;padding:3px 8px;font-size:.65rem;border-radius:4px;">🟢 ${s.daysLeft}j restants</span>`;
@@ -163,7 +165,7 @@ async function loadUsers() {
   const tbody = document.getElementById('users-tbody');
 
   // Alertes abonnements critiques
-  const critiques = users.filter(u => u.subscription && !u.subscription.unlimited && (u.subscription.expired || u.subscription.warning));
+  const critiques = users.filter(u => u.email !== 'demo@madrasati.ma' && u.role !== 'super' && u.subscription && !u.subscription.unlimited && (u.subscription.expired || u.subscription.warning));
   if (critiques.length) {
     const alertDiv = document.getElementById('users-alert');
     alertDiv.className = 'alert alert-err';

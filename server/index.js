@@ -21,7 +21,7 @@ app.use(trialMiddleware);
 function getSubscriptionInfo(user) {
   if (user.role === 'super' || user.role === 'demo') return { active: true, unlimited: true };
   if (user.email === 'demo@madrasati.ma') return { active: true, unlimited: true };
-  if (!user.subscriptionEnd) return { active: false, expired: true, daysLeft: 0 };
+  if (!user.subscriptionEnd) return { active: true, unlimited: false, daysLeft: 0, noSubscription: true };
   const now = Date.now();
   const end = new Date(user.subscriptionEnd).getTime();
   const daysLeft = Math.ceil((end - now) / 86400000);
