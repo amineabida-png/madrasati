@@ -21,6 +21,7 @@ app.use(trialMiddleware);
 function getSubscriptionInfo(user) {
   if (user.role === 'super' || user.role === 'demo') return { active: true, unlimited: true };
   if (user.email === 'demo@madrasati.ma') return { active: true, unlimited: true };
+  if (user.lifetime) return { active: true, unlimited: true, lifetime: true };
   if (!user.subscriptionEnd) return { active: true, unlimited: false, daysLeft: 0, noSubscription: true };
   const now = Date.now();
   const end = new Date(user.subscriptionEnd).getTime();
@@ -490,7 +491,7 @@ app.delete('/api/annonces/:id', authMiddleware, requireRole('admin'), async (req
 // ─── USERS ───────────────────────────────────────────────────────────────────
 
 app.get('/api/users', authMiddleware, requireRole('admin', 'super'), async (req, res) => {
-  const rows = await query('SELECT id, nom, prenom, email, role, telephone, actif, subscriptionEnd, created_at FROM users ORDER BY nom');
+  const rows = await query('SELECT id, nom, prenom, email, role, telephone, actif, subscriptionEnd, lifetime, created_at FROM users ORDER BY nom');
   res.json(rows.map(u => ({ ...u, subscription: getSubscriptionInfo(u) })));
 });
 
@@ -655,6 +656,16 @@ app.get('/api/subscription', authMiddleware, async (req, res) => {
   if (!users.length) return res.json({ expired: true });
   const user = users[0];
   res.json(getSubscriptionInfo(user));
+});
+
+// Activer/désactiver abonnement à vie
+app.put('/api/users/:id/lifetime', authMiddleware, requireRole('super'), async (req, res) => {
+  const users = await query('SELECT * FROM users WHERE id = ?', [req.params.id]);
+  if (!users.length) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+  const user = users[0];
+  const newLifetime = user.lifetime ? 0 : 1;
+  await run('UPDATE users SET lifetime = ? WHERE id = ?', [newLifetime, req.params.id]);
+  res.json({ ok: true, lifetime: newLifetime === 1 });
 });
 
 app.put('/api/users/:id/renew', authMiddleware, requireRole('super'), async (req, res) => {

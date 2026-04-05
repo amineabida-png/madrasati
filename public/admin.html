@@ -151,6 +151,7 @@ function subBadge(u) {
   if (u.role === 'super') return '<span style="font-size:.7rem;color:#475569;">—</span>';
   if (u.email === 'demo@madrasati.ma') return '<span style="background:#f59e0b20;color:#f59e0b;padding:3px 8px;font-size:.65rem;border-radius:4px;">⏱ Démo 24h</span>';
   const s = u.subscription;
+  if (s && s.lifetime) return '<span style="background:#7c3aed20;color:#7c3aed;padding:3px 8px;font-size:.65rem;border-radius:4px;">♾️ À VIE</span>';
   if (!s || s.expired || s.daysLeft === 0) return '<span style="background:#ef444420;color:#ef4444;padding:3px 8px;font-size:.65rem;border-radius:4px;">❌ EXPIRÉ</span>';
   if (s.unlimited) return '<span style="font-size:.7rem;color:#475569;">—</span>';
   if (s.warning) return `<span style="background:#ef444420;color:#ef4444;padding:3px 8px;font-size:.65rem;border-radius:4px;">🔴 ${s.daysLeft}j restants</span>`;
@@ -191,12 +192,23 @@ async function loadUsers() {
       <td style="display:flex;gap:6px;flex-wrap:wrap;">
         ${u.role !== 'super' && u.role !== 'demo' ? `
           <button class="btn btn-warn" onclick="openResetModal(${u.id}, '${u.prenom} ${u.nom}')">🔑 MDP</button>
-          <button class="btn" style="background:transparent;border:1px solid #34d399;color:#34d399;padding:6px 10px;font-size:.72px;border-radius:4px;cursor:pointer;" onclick="renewUser(${u.id}, '${u.prenom} ${u.nom}')">🔄 +30j</button>
+          <button class="btn" style="background:transparent;border:1px solid #34d399;color:#34d399;padding:6px 10px;font-size:.72rem;border-radius:4px;cursor:pointer;" onclick="renewUser(${u.id}, '${u.prenom} ${u.nom}')">🔄 +30j</button>
+          <button class="btn" style="background:transparent;border:1px solid #7c3aed;color:#7c3aed;padding:6px 10px;font-size:.72rem;border-radius:4px;cursor:pointer;" onclick="toggleLifetime(${u.id}, '${u.prenom} ${u.nom}', ${u.subscription && u.subscription.lifetime ? 'true' : 'false'})">${u.subscription && u.subscription.lifetime ? '♾️ Retirer vie' : '♾️ À vie'}</button>
           <button class="btn btn-danger" onclick="deleteUser(${u.id}, '${u.prenom} ${u.nom}')">🗑</button>
         ` : '<span style="color:#475569;font-size:.72rem;">—</span>'}
       </td>
     </tr>
   `).join('');
+}
+
+async function toggleLifetime(id, nom, isLifetime) {
+  const action = isLifetime ? 'Retirer' : 'Activer';
+  if (!confirm(`${action} l'abonnement à vie pour ${nom} ?`)) return;
+  const r = await fetch(`/api/users/${id}/lifetime`, { method: 'PUT' });
+  const d = await r.json();
+  if (!r.ok) { showAlert('users-alert', d.error, 'err'); return; }
+  showAlert('users-alert', `✔ Abonnement à vie ${d.lifetime ? 'activé' : 'retiré'} pour ${nom}`, 'ok');
+  loadUsers();
 }
 
 async function renewUser(id, nom) {
