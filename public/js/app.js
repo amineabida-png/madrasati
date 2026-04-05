@@ -201,6 +201,8 @@ async function initApp() {
     if (isDark) { document.getElementById('dark-icon').className = 'fas fa-sun'; document.getElementById('dark-label').textContent = 'Mode clair'; }
     buildSidebar(currentUser.role);
     showPage('dashboard');
+    // Check trial after user is loaded
+    setTimeout(checkTrial, 1000);
     // Update badge
     if (currentUser.role === 'admin') {
       const stats = await API.get('/api/factures/stats/summary');
@@ -221,30 +223,36 @@ initApp();
 async function checkTrial() {
   try {
     if (!currentUser) return;
-    // Bannière uniquement pour le compte demo
+    const banner = document.getElementById('trial-banner');
+    const pwdBtn = document.getElementById('change-pwd-btn');
+    
     if (currentUser.email !== 'demo@madrasati.ma') {
-      const banner = document.getElementById('trial-banner');
+      // Compte normal : cacher bannière, montrer changer mdp
       if (banner) banner.style.display = 'none';
+      if (pwdBtn) pwdBtn.style.display = 'flex';
       return;
     }
+    
+    // Compte demo : cacher changer mdp
+    if (pwdBtn) pwdBtn.style.display = 'none';
+    
     const t = await API.get('/api/trial');
     if (t.expired) {
       document.body.innerHTML = '';
       location.href = '/trial-expired.html';
       return;
     }
-    const banner = document.getElementById('trial-banner');
-    const countdown = document.getElementById('trial-countdown');
-    if (banner && countdown) {
+    // Montrer bannière avec compte à rebours
+    if (banner) {
       banner.style.display = 'block';
-      countdown.textContent = `${t.hours}h ${t.minutes}min`;
+      const countdown = document.getElementById('trial-countdown');
+      if (countdown) countdown.textContent = `${t.hours}h ${t.minutes}min`;
     }
   } catch(e) {}
 }
 
 // Check every minute
 setInterval(checkTrial, 60000);
-setTimeout(checkTrial, 3000);
 
 // ─── CHANGEMENT MOT DE PASSE ─────────────────────────────────────────────────
 function openChangePassword() {
