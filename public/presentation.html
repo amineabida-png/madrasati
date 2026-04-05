@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Madrasati — Système de Gestion Scolaire Marocain</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--pr:#1a2b4a;--ac:#e8b84b;--bg:#f8f6f1;--wh:#ffffff;--tx:#1a2b4a;--mu:#6b7a8d;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--tx);overflow-x:hidden;}
+
+/* HERO */
+.hero{min-height:100vh;background:var(--pr);display:flex;flex-direction:column;justify-content:center;padding:80px 40px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(232,184,75,.15),transparent 70%);border-radius:50%;}
+.hero::after{content:'مدرستي';position:absolute;bottom:-60px;right:-20px;font-size:220px;font-weight:900;color:rgba(255,255,255,.04);letter-spacing:-10px;font-family:'Playfair Display',serif;}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(232,184,75,.15);border:1px solid rgba(232,184,75,.3);color:var(--ac);padding:6px 16px;border-radius:20px;font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-bottom:32px;}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.5rem,6vw,5rem);font-weight:900;color:#fff;line-height:1.05;margin-bottom:12px;}
+.hero h1 span{color:var(--ac);}
+.hero-sub{font-size:1.1rem;color:rgba(255,255,255,.6);max-width:520px;line-height:1.7;margin-bottom:48px;}
+.hero-btns{display:flex;gap:16px;flex-wrap:wrap;}
+.btn-primary{background:var(--ac);color:var(--pr);padding:14px 32px;border-radius:8px;font-weight:700;font-size:.92rem;text-decoration:none;transition:all .2s;border:none;cursor:pointer;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(232,184,75,.4);}
+.btn-outline{background:transparent;color:#fff;padding:14px 32px;border-radius:8px;font-weight:600;font-size:.92rem;text-decoration:none;border:1.5px solid rgba(255,255,255,.3);transition:all .2s;}
+.btn-outline:hover{border-color:#fff;background:rgba(255,255,255,.05);}
+.hero-stats{display:flex;gap:40px;margin-top:60px;padding-top:40px;border-top:1px solid rgba(255,255,255,.1);}
+.stat-item{text-align:left;}
+.stat-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:var(--ac);}
+.stat-lbl{font-size:.75rem;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.08em;margin-top:2px;}
+
+/* SECTIONS */
+section{padding:80px 40px;max-width:1100px;margin:0 auto;}
+.section-badge{font-size:.7rem;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.15em;margin-bottom:12px;}
+.section-title{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;color:var(--pr);line-height:1.1;margin-bottom:20px;}
+.section-sub{font-size:1rem;color:var(--mu);line-height:1.8;max-width:560px;}
+
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:48px;}
+.feature-card{background:var(--wh);border-radius:16px;padding:28px;border:1px solid #e8e8e8;transition:all .2s;}
+.feature-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(26,43,74,.1);}
+.feature-icon{font-size:2rem;margin-bottom:16px;}
+.feature-title{font-size:1rem;font-weight:700;color:var(--pr);margin-bottom:8px;}
+.feature-desc{font-size:.85rem;color:var(--mu);line-height:1.7;}
+
+/* MODULES */
+.modules-wrap{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:48px;}
+.module{display:flex;align-items:center;gap:16px;background:var(--wh);border-radius:12px;padding:20px;border-left:3px solid var(--ac);}
+.module-icon{font-size:1.5rem;flex-shrink:0;}
+.module-name{font-weight:700;font-size:.9rem;color:var(--pr);}
+.module-desc{font-size:.78rem;color:var(--mu);margin-top:2px;}
+
+/* PRICING */
+.pricing-wrap{padding:80px 40px;background:var(--pr);}
+.pricing-inner{max-width:800px;margin:0 auto;text-align:center;}
+.pricing-inner .section-title{color:#fff;}
+.pricing-inner .section-sub{color:rgba(255,255,255,.6);margin:0 auto 48px;}
+.pricing-cards{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.price-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:36px 28px;text-align:left;}
+.price-card.featured{background:var(--ac);border-color:var(--ac);}
+.price-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.5);margin-bottom:12px;}
+.price-card.featured .price-label{color:rgba(26,43,74,.6);}
+.price-amount{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:900;color:#fff;line-height:1;}
+.price-card.featured .price-amount{color:var(--pr);}
+.price-period{font-size:.8rem;color:rgba(255,255,255,.5);margin-top:4px;}
+.price-card.featured .price-period{color:rgba(26,43,74,.5);}
+.price-features{list-style:none;margin-top:24px;display:flex;flex-direction:column;gap:10px;}
+.price-features li{font-size:.85rem;color:rgba(255,255,255,.8);display:flex;align-items:center;gap:8px;}
+.price-features li::before{content:'✓';color:var(--ac);font-weight:700;}
+.price-card.featured .price-features li{color:var(--pr);}
+.price-card.featured .price-features li::before{color:var(--pr);}
+
+/* CONTACT */
+.contact-wrap{background:var(--bg);padding:80px 40px;text-align:center;}
+.contact-inner{max-width:600px;margin:0 auto;}
+.contact-btns{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:32px;}
+.contact-phone{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:var(--pr);margin:16px 0;}
+.contact-email{font-size:1rem;color:var(--mu);}
+
+/* CGU link */
+.cgu-link{text-align:center;padding:24px;font-size:.78rem;color:var(--mu);}
+.cgu-link a{color:var(--pr);text-decoration:underline;}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+.modules-wrap,.pricing-cards{grid-template-columns:1fr;}
+.hero-stats{gap:24px;}
+section{padding:60px 20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div style="max-width:1100px;margin:0 auto;width:100%;">
+    <div class="hero-badge">🏫 Solution Scolaire Marocaine</div>
+    <h1>مدرستي<br><span>Madrasati</span></h1>
+    <p class="hero-sub">Le système de gestion scolaire complet pour les établissements marocains. Gérez élèves, enseignants, notes, présences et facturation depuis une seule plateforme.</p>
+    <div class="hero-btns">
+      <a href="https://madrasati-production.up.railway.app" class="btn-primary">🚀 Essayer gratuitement 24h</a>
+      <a href="#contact" class="btn-outline">📞 Nous contacter</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><div class="stat-num">6</div><div class="stat-lbl">Modules complets</div></div>
+      <div class="stat-item"><div class="stat-num">100%</div><div class="stat-lbl">En ligne, partout</div></div>
+      <div class="stat-item"><div class="stat-num">24h</div><div class="stat-lbl">Démo gratuite</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section>
+  <div class="section-badge">Pourquoi Madrasati ?</div>
+  <h2 class="section-title">Tout ce dont votre<br>école a besoin</h2>
+  <p class="section-sub">Une solution complète, simple et accessible depuis n'importe quel appareil, conçue spécialement pour le système scolaire marocain.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">☁️</div>
+      <div class="feature-title">100% en ligne</div>
+      <div class="feature-desc">Accessible depuis n'importe quel navigateur, sur PC, tablette ou mobile. Aucune installation requise.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔒</div>
+      <div class="feature-title">Sécurisé</div>
+      <div class="feature-desc">Données chiffrées, accès par rôles (directeur, prof, élève, parent), connexion sécurisée HTTPS.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🇲🇦</div>
+      <div class="feature-title">Adapté au Maroc</div>
+      <div class="feature-desc">Interface en français, facturation en MAD, niveaux scolaires marocains (primaire, collège, lycée).</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <div class="feature-title">Tableaux de bord</div>
+      <div class="feature-desc">Statistiques en temps réel : absences du jour, top élèves, factures impayées, annonces récentes.</div>
+    </div>
+  </div>
+</section>
+
+<!-- MODULES -->
+<div style="background:var(--wh);padding:80px 40px;">
+<section style="padding:0;">
+  <div class="section-badge">Fonctionnalités</div>
+  <h2 class="section-title">Tous les modules<br>inclus</h2>
+  <div class="modules-wrap">
+    <div class="module"><div class="module-icon">🎓</div><div><div class="module-name">Gestion des Élèves</div><div class="module-desc">Fiches complètes, matricules, classes, parents</div></div></div>
+    <div class="module"><div class="module-icon">👨‍🏫</div><div><div class="module-name">Gestion des Enseignants</div><div class="module-desc">Profils, matières, classes assignées</div></div></div>
+    <div class="module"><div class="module-icon">🏫</div><div><div class="module-name">Classes & Groupes</div><div class="module-desc">Organisation par niveaux, taux de remplissage</div></div></div>
+    <div class="module"><div class="module-icon">📅</div><div><div class="module-name">Emploi du Temps</div><div class="module-desc">Planning hebdomadaire par classe et prof</div></div></div>
+    <div class="module"><div class="module-icon">📝</div><div><div class="module-name">Notes & Bulletins</div><div class="module-desc">Saisie des notes, calcul automatique, top élèves</div></div></div>
+    <div class="module"><div class="module-icon">✅</div><div><div class="module-name">Présences</div><div class="module-desc">Appel quotidien, suivi des absences par élève</div></div></div>
+    <div class="module"><div class="module-icon">💰</div><div><div class="module-name">Facturation</div><div class="module-desc">Factures scolarité, suivi paiements, impayés</div></div></div>
+    <div class="module"><div class="module-icon">📢</div><div><div class="module-name">Annonces</div><div class="module-desc">Communication école-parents-élèves</div></div></div>
+  </div>
+</section>
+</div>
+
+<!-- PRICING -->
+<div class="pricing-wrap">
+  <div class="pricing-inner">
+    <div class="section-badge" style="color:var(--ac);">Tarifs</div>
+    <h2 class="section-title">Des tarifs adaptés<br>à votre établissement</h2>
+    <p class="section-sub">Sans engagement. Accès complet dès le premier jour. Support inclus.</p>
+    <div class="pricing-cards">
+      <div class="price-card">
+        <div class="price-label">Abonnement mensuel</div>
+        <div class="price-amount">300<span style="font-size:1.2rem;">MAD</span></div>
+        <div class="price-period">par mois · sans engagement</div>
+        <ul class="price-features">
+          <li>Accès complet à tous les modules</li>
+          <li>Nombre d'élèves illimité</li>
+          <li>Support WhatsApp inclus</li>
+          <li>Mises à jour automatiques</li>
+          <li>Export des données JSON</li>
+        </ul>
+      </div>
+      <div class="price-card featured">
+        <div class="price-label">Licence à vie ⭐</div>
+        <div class="price-amount">2500<span style="font-size:1.2rem;">MAD</span></div>
+        <div class="price-period">paiement unique · pour toujours</div>
+        <ul class="price-features">
+          <li>Tout le mensuel inclus</li>
+          <li>Aucun frais récurrent</li>
+          <li>Priorité support</li>
+          <li>Toutes les futures mises à jour</li>
+          <li>Meilleur rapport qualité/prix</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT -->
+<div class="contact-wrap" id="contact">
+  <div class="contact-inner">
+    <div class="section-badge">Contact</div>
+    <h2 class="section-title">Prêt à commencer ?</h2>
+    <p class="section-sub" style="margin:0 auto;">Essayez gratuitement pendant 24h ou contactez-nous directement pour une démonstration personnalisée.</p>
+    <div class="contact-phone">📞 0660 950 922</div>
+    <div class="contact-email">✉️ amineabida@gmail.com</div>
+    <div class="contact-btns">
+      <a href="https://madrasati-production.up.railway.app" class="btn-primary">🚀 Essayer 24h gratuit</a>
+      <a href="https://wa.me/212660950922?text=Bonjour, je suis intéressé par Madrasati" class="btn-outline" style="color:var(--pr);border-color:var(--pr);">💬 WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<div class="cgu-link">
+  <a href="/cgu">Conditions Générales d'Utilisation</a> · © 2026 Madrasati · Tous droits réservés
+</div>
+
+</body>
+</html>
