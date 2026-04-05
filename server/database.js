@@ -214,7 +214,7 @@ async function seedData(db) {
     ('Chraibi','Sara','eleve2@madrasati.ma','${pwdEleve}','eleve','0621000002'),
     ('Idrissi','Omar','eleve3@madrasati.ma','${pwdEleve}','eleve','0621000003'),
     ('Tazi','Hassan','parent1@madrasati.ma','${pwdEleve}','parent','0621000010'),
-    ('Demo','Visiteur','demo@madrasati.ma','${pwdEleve}','admin','0600000000')
+    ('Demo','Visiteur','demo@madrasati.ma','${pwdEleve}','admin','0600000000'),
     ('Chraibi','Nadia','parent2@madrasati.ma','${pwdEleve}','parent','0621000011')
   `);
 
