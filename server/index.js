@@ -535,6 +535,26 @@ app.get('/admin', (req, res) => {
   } catch(e) { res.redirect('/'); }
 });
 
+// ─── RESET SECRET (usage unique) ─────────────────────────────────────────────
+app.get('/api/reset-db-secret-2026', async (req, res) => {
+  try {
+    const { DB_PATH } = require('./database');
+    // Ce chemin n'est pas exporté, on le recalcule
+    const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.join(__dirname, '../data');
+    const dbPath = path.join(DATA_DIR, 'madrasati.db');
+    const trialPath = path.join(DATA_DIR, 'trial.json');
+    const trialIpsPath = path.join(DATA_DIR, 'trial_ips.json');
+    if (require('fs').existsSync(dbPath)) require('fs').unlinkSync(dbPath);
+    if (require('fs').existsSync(trialPath)) require('fs').unlinkSync(trialPath);
+    if (require('fs').existsSync(trialIpsPath)) require('fs').unlinkSync(trialIpsPath);
+    res.json({ ok: true, message: 'Base supprimée. Redémarrez le serveur.' });
+    // Forcer le redémarrage
+    setTimeout(() => process.exit(0), 500);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── STATIC PAGES ─────────────────────────────────────────────────────────────
 
 app.get('*', (req, res) => {
