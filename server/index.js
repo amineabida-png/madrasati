@@ -8,14 +8,12 @@ const { getDB, query, run } = require('./database');
 const { authMiddleware, requireRole, SECRET } = require('./auth');
 const { initTrial, getTrialInfo, trialMiddleware } = require('./trial');
 
-// Apply trial middleware to all API routes
-app.use(trialMiddleware);
-
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({ credentials: true, origin: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use(trialMiddleware);
 
 // ─── TRIAL ───────────────────────────────────────────────────────────────────
 app.get('/api/trial', (req, res) => {
