@@ -201,48 +201,48 @@ async function exportData() {
   }
 }
 
-async function importData(e) {
+function importData(e) {
   const file = e.target.files[0];
   if (!file) return;
-  if (!confirm('⚠️ Importer ce fichier va remplacer toutes les données actuelles.\nContinuer ?')) { e.target.value = ''; return; }
-  const reader = new FileReader();
-  reader.onload = async (ev) => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (!data.eleves) { toast('Format JSON invalide', 'error'); return; }
-      const r = await fetch('/api/import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API.token },
-        body: JSON.stringify(data)
-      });
-      const result = await r.json();
-      if (!r.ok) { toast('Erreur: ' + result.error, 'error'); return; }
-      toast('✔ Import réussi — ' + (data.eleves?.length || 0) + ' élèves importés');
-      showPage('dashboard');
-    } catch(err) {
-      toast('Fichier JSON invalide', 'error');
-    }
-  };
-  reader.readAsText(file);
+  confirm('⚠️ Importer ce fichier va remplacer toutes les données actuelles. Continuer ?', () => {
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.eleves) { toast('Format JSON invalide', 'error'); return; }
+        const r = await fetch('/api/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API.token },
+          body: JSON.stringify(data)
+        });
+        const result = await r.json();
+        if (!r.ok) { toast('Erreur: ' + result.error, 'error'); return; }
+        toast('✔ Import réussi — ' + (data.eleves?.length || 0) + ' élèves importés');
+        setTimeout(() => window.location.reload(), 1500);
+      } catch(err) {
+        toast('Fichier JSON invalide', 'error');
+      }
+    };
+    reader.readAsText(file);
+  });
   e.target.value = '';
 }
 
-async function resetData() {
-  if (!confirm('⚠️ Réinitialiser TOUTES les données scolaires ?\n\nÉlèves, profs, classes, notes, présences, factures, annonces... seront supprimés.')) return;
-  if (!confirm('Dernière confirmation — cette action est irréversible.')) return;
-  try {
-    const r = await fetch('/api/reset', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API.token }
-    });
-    const result = await r.json();
-    if (!r.ok) { toast('Erreur: ' + result.error, 'error'); return; }
-    toast('✔ Application réinitialisée — toutes les données ont été supprimées');
-    // Recharger la page pour vider le cache
-    setTimeout(() => window.location.reload(), 1500);
-  } catch(e) {
-    toast('Erreur: ' + e.message, 'error');
-  }
+function resetData() {
+  confirm('⚠️ Réinitialiser TOUTES les données scolaires ?\n\nÉlèves, profs, classes, notes, présences, factures, annonces... seront supprimés. Cette action est irréversible.', async () => {
+    try {
+      const r = await fetch('/api/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API.token }
+      });
+      const result = await r.json();
+      if (!r.ok) { toast('Erreur: ' + result.error, 'error'); return; }
+      toast('✔ Application réinitialisée — toutes les données ont été supprimées');
+      setTimeout(() => window.location.reload(), 1500);
+    } catch(e) {
+      toast('Erreur: ' + e.message, 'error');
+    }
+  });
 }
 
 // LOGIN
