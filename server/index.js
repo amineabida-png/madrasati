@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { getDB, query, run } = require('./database');
 const { authMiddleware, requireRole, SECRET } = require('./auth');
-const { initTrial, getTrialInfo, trialMiddleware } = require('./trial');
+const { getTrialInfo, trialMiddleware } = require('./trial');
 
 const app = express();
 app.use(express.json());
@@ -17,7 +17,7 @@ app.use(trialMiddleware);
 
 // ─── TRIAL ───────────────────────────────────────────────────────────────────
 app.get('/api/trial', (req, res) => {
-  res.json(getTrialInfo());
+  res.json(getTrialInfo(req));
 });
 
 // ─── AUTH ────────────────────────────────────────────────────────────────────
