@@ -3,7 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const DB_PATH = path.join(__dirname, '../data/madrasati.db');
+// Sur Railway, utiliser /data si disponible (volume persistant), sinon fallback local
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH
+  ? process.env.RAILWAY_VOLUME_MOUNT_PATH
+  : path.join(__dirname, '../data');
+const DB_PATH = path.join(DATA_DIR, 'madrasati.db');
 
 let db = null;
 

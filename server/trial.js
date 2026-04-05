@@ -3,7 +3,10 @@ const path = require('path');
 const jwt = require('jsonwebtoken');
 const SECRET = 'madrasati_secret_2024_maroc';
 
-const TRIAL_FILE = path.join(__dirname, '../data/trial.json');
+const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH
+  ? process.env.RAILWAY_VOLUME_MOUNT_PATH
+  : path.join(__dirname, '../data');
+const TRIAL_FILE = path.join(DATA_DIR, 'trial.json');
 const TRIAL_DURATION = 48 * 60 * 60 * 1000; // 48h
 const TRIAL_EMAIL = 'demo@madrasati.ma';
 

@@ -200,6 +200,11 @@ async function initApp() {
     document.getElementById('sidebar-avatar').textContent = initials(currentUser.nom, currentUser.prenom);
     if (isDark) { document.getElementById('dark-icon').className = 'fas fa-sun'; document.getElementById('dark-label').textContent = 'Mode clair'; }
     buildSidebar(currentUser.role);
+    // Fix: afficher/cacher le bouton mdp immédiatement selon le compte demo
+    const pwdBtn = document.getElementById('change-pwd-btn');
+    if (pwdBtn) {
+      pwdBtn.style.display = currentUser.email === 'demo@madrasati.ma' ? 'none' : 'flex';
+    }
     showPage('dashboard');
     // Check trial after user is loaded
     setTimeout(checkTrial, 1000);
