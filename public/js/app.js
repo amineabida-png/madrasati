@@ -181,6 +181,69 @@ async function loginDemo() {
   }
 }
 
+
+// ─── EXPORT / IMPORT / RESET ─────────────────────────────
+async function exportData() {
+  try {
+    const resp = await fetch('/api/export', { headers: { 'Authorization': 'Bearer ' + API.token } });
+    const r = await resp.json();
+    const json = JSON.stringify(r, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'madrasati_backup_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('✔ Export JSON téléchargé');
+  } catch(e) {
+    toast('Erreur export: ' + e.message, 'error');
+  }
+}
+
+async function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!confirm('⚠️ Importer ce fichier va remplacer toutes les données actuelles.\nContinuer ?')) { e.target.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!data.eleves) { toast('Format JSON invalide', 'error'); return; }
+      const r = await fetch('/api/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API.token },
+        body: JSON.stringify(data)
+      });
+      const result = await r.json();
+      if (!r.ok) { toast('Erreur: ' + result.error, 'error'); return; }
+      toast('✔ Import réussi — ' + (data.eleves?.length || 0) + ' élèves importés');
+      showPage('dashboard');
+    } catch(err) {
+      toast('Fichier JSON invalide', 'error');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+async function resetData() {
+  if (!confirm('⚠️ Réinitialiser TOUTES les données scolaires ?\n\nÉlèves, profs, notes, présences, factures... seront supprimés.')) return;
+  if (!confirm('Dernière confirmation — cette action est irréversible.')) return;
+  try {
+    const r = await fetch('/api/reset', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + API.token }
+    });
+    const result = await r.json();
+    if (!r.ok) { toast('Erreur: ' + result.error, 'error'); return; }
+    toast('✔ Toutes les données ont été réinitialisées');
+    showPage('dashboard');
+  } catch(e) {
+    toast('Erreur: ' + e.message, 'error');
+  }
+}
+
 // LOGIN
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();

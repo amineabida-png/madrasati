@@ -544,6 +544,95 @@ app.put('/api/users/:id/password', authMiddleware, async (req, res) => {
 });
 
 
+
+// ─── EXPORT / IMPORT / RESET ──────────────────────────────────────────────────
+
+app.get('/api/export', authMiddleware, requireRole('admin', 'super'), async (req, res) => {
+  await getDB();
+  const data = {
+    exportDate: new Date().toISOString(),
+    eleves: await query('SELECT * FROM eleves'),
+    users: await query('SELECT id,nom,prenom,email,role,telephone,adresse,date_naissance,actif FROM users WHERE role NOT IN ("super","demo")'),
+    classes: await query('SELECT * FROM classes'),
+    niveaux: await query('SELECT * FROM niveaux'),
+    matieres: await query('SELECT * FROM matieres'),
+    profs: await query('SELECT * FROM profs'),
+    prof_matieres: await query('SELECT * FROM prof_matieres'),
+    emploi_du_temps: await query('SELECT * FROM emploi_du_temps'),
+    periodes: await query('SELECT * FROM periodes'),
+    notes: await query('SELECT * FROM notes'),
+    presences: await query('SELECT * FROM presences'),
+    factures: await query('SELECT * FROM factures'),
+    paiements: await query('SELECT * FROM paiements'),
+    annonces: await query('SELECT * FROM annonces'),
+    conges: await query('SELECT * FROM conges'),
+  };
+  res.setHeader('Content-Disposition', 'attachment; filename=madrasati_backup_' + new Date().toISOString().slice(0,10) + '.json');
+  res.json(data);
+});
+
+app.post('/api/import', authMiddleware, requireRole('admin', 'super'), async (req, res) => {
+  try {
+    const data = req.body;
+    if (!data || !data.eleves) return res.status(400).json({ error: 'Format JSON invalide' });
+    // On importe uniquement les données scolaires (pas les users système)
+    const tables = ['notes','presences','paiements','factures','annonces','conges','emploi_du_temps','prof_matieres'];
+    for (const t of tables) await run(`DELETE FROM ${t}`);
+    await run('DELETE FROM eleves');
+    await run('DELETE FROM profs');
+    await run('DELETE FROM classes');
+    await run('DELETE FROM matieres');
+    await run('DELETE FROM niveaux');
+    await run('DELETE FROM periodes');
+    // Réimporter
+    const insertAll = async (table, rows) => {
+      if (!rows || !rows.length) return;
+      for (const row of rows) {
+        const cols = Object.keys(row).join(',');
+        const vals = Object.keys(row).map(() => '?').join(',');
+        await run(`INSERT OR IGNORE INTO ${table} (${cols}) VALUES (${vals})`, Object.values(row));
+      }
+    };
+    await insertAll('niveaux', data.niveaux);
+    await insertAll('classes', data.classes);
+    await insertAll('matieres', data.matieres);
+    await insertAll('periodes', data.periodes);
+    if (data.users) {
+      for (const u of data.users) {
+        if (!['super','demo','admin'].includes(u.role)) {
+          await run('INSERT OR IGNORE INTO users (id,nom,prenom,email,password,role,telephone) VALUES (?,?,?,?,?,?,?)',
+            [u.id, u.nom, u.prenom, u.email, u.password || '$2a$10$x', u.role, u.telephone || '']);
+        }
+      }
+    }
+    await insertAll('profs', data.profs);
+    await insertAll('eleves', data.eleves);
+    await insertAll('prof_matieres', data.prof_matieres);
+    await insertAll('emploi_du_temps', data.emploi_du_temps);
+    await insertAll('notes', data.notes);
+    await insertAll('presences', data.presences);
+    await insertAll('factures', data.factures);
+    await insertAll('paiements', data.paiements);
+    await insertAll('annonces', data.annonces);
+    await insertAll('conges', data.conges);
+    res.json({ ok: true, message: 'Import réussi' });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/reset', authMiddleware, requireRole('admin', 'super'), async (req, res) => {
+  try {
+    const tables = ['notes','presences','paiements','factures','annonces','conges','emploi_du_temps','prof_matieres','eleves','profs','classes','matieres','niveaux','periodes'];
+    for (const t of tables) await run(`DELETE FROM ${t}`);
+    // Supprimer les users sauf super, admin et demo
+    await run("DELETE FROM users WHERE role NOT IN ('super','admin','demo')");
+    res.json({ ok: true });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── ABONNEMENT ROUTES ────────────────────────────────────────────────────────
 
 app.get('/api/subscription', authMiddleware, async (req, res) => {

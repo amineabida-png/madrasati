@@ -396,6 +396,19 @@
         <span class="nav-icon"><i class="fas fa-users-cog" style="color:#f59e0b;"></i></span>
         <span style="color:#f59e0b;">Gérer utilisateurs</span>
       </button>
+      <button onclick="exportData()" class="nav-item" style="width:100%; background:none; border:none; text-align:left;">
+        <span class="nav-icon"><i class="fas fa-download" style="color:#34d399;"></i></span>
+        <span style="color:#34d399;">Export JSON</span>
+      </button>
+      <label class="nav-item" for="import-json-file" style="width:100%; background:none; border:none; text-align:left; cursor:pointer;">
+        <span class="nav-icon"><i class="fas fa-upload" style="color:#60a5fa;"></i></span>
+        <span style="color:#60a5fa;">Import JSON</span>
+      </label>
+      <input type="file" id="import-json-file" accept=".json" style="display:none;" onchange="importData(event)">
+      <button onclick="resetData()" class="nav-item" style="width:100%; background:none; border:none; text-align:left;">
+        <span class="nav-icon"><i class="fas fa-trash-alt" style="color:#ef4444;"></i></span>
+        <span style="color:#ef4444;">Réinitialiser données</span>
+      </button>
       <button onclick="toggleDark()" class="nav-item" style="width:100%; background:none; border:none; text-align:left;">
         <span class="nav-icon"><i class="fas fa-moon" id="dark-icon"></i></span>
         <span id="dark-label">Mode sombre</span>
