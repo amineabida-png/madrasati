@@ -623,10 +623,22 @@ app.post('/api/import', authMiddleware, requireRole('admin', 'super'), async (re
 
 app.post('/api/reset', authMiddleware, requireRole('admin', 'super'), async (req, res) => {
   try {
-    const tables = ['notes','presences','paiements','factures','annonces','conges','emploi_du_temps','prof_matieres','eleves','profs','classes','matieres','niveaux','periodes'];
-    for (const t of tables) await run(`DELETE FROM ${t}`);
-    // Supprimer les users sauf super, admin et demo
+    // Ordre important : d'abord les tables avec FK, puis les tables principales
+    const tables = [
+      'paiements', 'notes', 'presences', 'conges',
+      'emploi_du_temps', 'prof_matieres',
+      'factures', 'annonces',
+      'eleves', 'profs',
+      'classes', 'matieres', 'niveaux', 'periodes'
+    ];
+    for (const t of tables) {
+      try { await run(`DELETE FROM ${t}`); } catch(e) {}
+    }
+    // Supprimer users sauf comptes système
     await run("DELETE FROM users WHERE role NOT IN ('super','admin','demo')");
+    // Forcer sauvegarde sur disque
+    const { saveDB } = require('./database');
+    saveDB();
     res.json({ ok: true });
   } catch(e) {
     res.status(500).json({ error: e.message });

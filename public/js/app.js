@@ -228,17 +228,18 @@ async function importData(e) {
 }
 
 async function resetData() {
-  if (!confirm('⚠️ Réinitialiser TOUTES les données scolaires ?\n\nÉlèves, profs, notes, présences, factures... seront supprimés.')) return;
+  if (!confirm('⚠️ Réinitialiser TOUTES les données scolaires ?\n\nÉlèves, profs, classes, notes, présences, factures, annonces... seront supprimés.')) return;
   if (!confirm('Dernière confirmation — cette action est irréversible.')) return;
   try {
     const r = await fetch('/api/reset', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + API.token }
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + API.token }
     });
     const result = await r.json();
     if (!r.ok) { toast('Erreur: ' + result.error, 'error'); return; }
-    toast('✔ Toutes les données ont été réinitialisées');
-    showPage('dashboard');
+    toast('✔ Application réinitialisée — toutes les données ont été supprimées');
+    // Recharger la page pour vider le cache
+    setTimeout(() => window.location.reload(), 1500);
   } catch(e) {
     toast('Erreur: ' + e.message, 'error');
   }
