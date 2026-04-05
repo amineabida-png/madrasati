@@ -358,7 +358,7 @@ async function checkSubscription() {
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px;">
           <div style="font-size:3rem;margin-bottom:16px;">🔒</div>
           <h2 style="margin-bottom:8px;">Abonnement expiré</h2>
-          <p style="color:var(--muted);margin-bottom:24px;">Votre abonnement mensuel a expiré. Contactez l'administrateur pour le renouveler.</p>
+          <p style="color:var(--muted);margin-bottom:24px;">Votre abonnement mensuel a expiré. Contactez l'administrateur pour le renouveler.<br><br>📞 0660950922 &nbsp;·&nbsp; ✉️ amineabida@gmail.com</p>
           <button onclick="logout()" class="btn btn-primary">Se déconnecter</button>
         </div>`;
       return;
@@ -371,7 +371,7 @@ async function checkSubscription() {
         banner.style.cssText = `position:fixed;bottom:0;left:0;right:0;z-index:9998;background:${s.warning ? 'linear-gradient(90deg,#dc2626,#b91c1c)' : 'linear-gradient(90deg,#d97706,#b45309)'};color:white;padding:10px 20px;text-align:center;font-size:13px;font-weight:600;`;
         document.body.appendChild(banner);
       }
-      banner.textContent = `${s.warning ? '🔴' : '🟡'} ABONNEMENT — ${s.daysLeft} jour(s) restants · Contactez votre administrateur`;
+      banner.textContent = `${s.warning ? '🔴' : '🟡'} ABONNEMENT — ${s.daysLeft} jour(s) restants · Contactez votre administrateur · 0660950922 · amineabida@gmail.com`;
     }
   } catch(e) {}
 }
