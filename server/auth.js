@@ -14,6 +14,8 @@ function authMiddleware(req, res, next) {
 
 function requireRole(...roles) {
   return (req, res, next) => {
+    // super a accès à tout
+    if (req.user?.role === 'super') return next();
     if (!roles.includes(req.user?.role)) {
       return res.status(403).json({ error: 'Accès refusé' });
     }

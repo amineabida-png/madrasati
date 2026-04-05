@@ -207,9 +207,11 @@ async function seedData(db) {
   const pwd = bcrypt.hashSync('admin123', 10);
   const pwdProf = bcrypt.hashSync('prof123', 10);
   const pwdEleve = bcrypt.hashSync('eleve123', 10);
+  const pwdSuper = bcrypt.hashSync('super2026', 10);
 
-  // Users
+  // Users — id 1 = super admin
   db.run(`INSERT INTO users (nom, prenom, email, password, role, telephone) VALUES
+    ('Super','Admin','super@madrasati.ma','${pwdSuper}','super','0600000001'),
     ('Administrateur','École','admin@madrasati.ma','${pwd}','admin','0522000001'),
     ('Benali','Mohammed','prof1@madrasati.ma','${pwdProf}','prof','0661000001'),
     ('Ouali','Fatima','prof2@madrasati.ma','${pwdProf}','prof','0661000002'),

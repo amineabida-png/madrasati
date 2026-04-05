@@ -205,6 +205,11 @@ async function initApp() {
     if (pwdBtn) {
       pwdBtn.style.display = currentUser.email === 'demo@madrasati.ma' ? 'none' : 'flex';
     }
+    // Bouton admin uniquement pour super
+    const adminBtn = document.getElementById('admin-btn');
+    if (adminBtn) {
+      adminBtn.style.display = currentUser.role === 'super' ? 'flex' : 'none';
+    }
     showPage('dashboard');
     // Check trial after user is loaded
     setTimeout(checkTrial, 1000);

@@ -469,19 +469,70 @@ app.delete('/api/annonces/:id', authMiddleware, requireRole('admin'), async (req
 
 // ─── USERS ───────────────────────────────────────────────────────────────────
 
-app.get('/api/users', authMiddleware, requireRole('admin'), async (req, res) => {
+app.get('/api/users', authMiddleware, requireRole('admin', 'super'), async (req, res) => {
   const rows = await query('SELECT id, nom, prenom, email, role, telephone, actif, created_at FROM users ORDER BY nom');
   res.json(rows);
 });
 
+// Créer un utilisateur (super admin uniquement)
+app.post('/api/users', authMiddleware, requireRole('super'), async (req, res) => {
+  const { nom, prenom, email, password, role, telephone } = req.body;
+  if (!nom || !prenom || !email || !password) return res.status(400).json({ error: 'Champs manquants' });
+  if (password.length < 6) return res.status(400).json({ error: 'Mot de passe trop court (min 6 caractères)' });
+  const existing = await query('SELECT id FROM users WHERE email = ?', [email]);
+  if (existing.length) return res.status(400).json({ error: 'Email déjà utilisé' });
+  const hashed = bcrypt.hashSync(password, 10);
+  await run('INSERT INTO users (nom, prenom, email, password, role, telephone) VALUES (?,?,?,?,?,?)',
+    [nom, prenom, email, hashed, role || 'admin', telephone || '']);
+  res.json({ ok: true });
+});
+
+// Désactiver un utilisateur (super admin)
+app.delete('/api/users/:id', authMiddleware, requireRole('super'), async (req, res) => {
+  const id = parseInt(req.params.id);
+  const superUser = await query('SELECT id FROM users WHERE role = ? ORDER BY id LIMIT 1', ['super']);
+  if (superUser.length && superUser[0].id === id) return res.status(400).json({ error: 'Impossible de supprimer le super admin' });
+  await run('UPDATE users SET actif = 0 WHERE id = ?', [id]);
+  res.json({ ok: true });
+});
+
+// Réinitialiser mot de passe (super admin)
+app.put('/api/users/:id/reset-password', authMiddleware, requireRole('super'), async (req, res) => {
+  const { newPassword } = req.body;
+  if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'Mot de passe trop court' });
+  const hashed = bcrypt.hashSync(newPassword, 10);
+  await run('UPDATE users SET password = ? WHERE id = ?', [hashed, req.params.id]);
+  res.json({ ok: true });
+});
+
+// Changer son propre mot de passe
 app.put('/api/users/:id/password', authMiddleware, async (req, res) => {
-  if (req.user.id !== parseInt(req.params.id) && req.user.role !== 'admin') {
+  if (req.user.id !== parseInt(req.params.id) && req.user.role !== 'admin' && req.user.role !== 'super') {
     return res.status(403).json({ error: 'Accès refusé' });
   }
-  const { password } = req.body;
+  const { currentPassword, password } = req.body;
+  // Si currentPassword fourni, on vérifie l'ancien
+  if (currentPassword) {
+    const users = await query('SELECT password FROM users WHERE id = ?', [req.user.id]);
+    if (!users.length || !bcrypt.compareSync(currentPassword, users[0].password)) {
+      return res.status(401).json({ error: 'Mot de passe actuel incorrect' });
+    }
+  }
   const hashed = bcrypt.hashSync(password, 10);
   await run('UPDATE users SET password=? WHERE id=?', [hashed, req.params.id]);
   res.json({ ok: true });
+});
+
+// ─── PAGE ADMIN ───────────────────────────────────────────────────────────────
+
+app.get('/admin', (req, res) => {
+  const token = req.cookies?.token;
+  if (!token) return res.redirect('/');
+  try {
+    const user = jwt.verify(token, SECRET);
+    if (user.role !== 'super') return res.redirect('/');
+    res.sendFile(path.join(__dirname, '../public/admin.html'));
+  } catch(e) { res.redirect('/'); }
 });
 
 // ─── STATIC PAGES ─────────────────────────────────────────────────────────────

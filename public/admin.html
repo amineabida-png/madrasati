@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Madrasati — Administration</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:#0f1b35;color:#e2e8f0;min-height:100vh;}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;background:#0f1b35;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:60px;}
+.logo{display:flex;align-items:center;gap:12px;}
+.logo-text{font-size:20px;font-weight:900;color:white;}
+.logo-sub{font-size:11px;color:rgba(255,255,255,0.4);}
+.topbar-actions{display:flex;gap:8px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-size:.78rem;font-weight:600;cursor:pointer;border:none;border-radius:6px;transition:all .15s;}
+.btn-primary{background:#2563eb;color:#fff;}
+.btn-primary:hover{background:#1d4ed8;}
+.btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);}
+.btn-outline:hover{border-color:#60a5fa;color:white;}
+.btn-danger{background:transparent;border:1px solid #ef4444;color:#ef4444;padding:6px 12px;font-size:.72rem;border-radius:4px;}
+.btn-danger:hover{background:#ef444420;}
+.btn-warn{background:transparent;border:1px solid #f59e0b;color:#f59e0b;padding:6px 12px;font-size:.72rem;border-radius:4px;}
+.btn-warn:hover{background:#f59e0b20;}
+.main{padding:80px 24px 24px;max-width:960px;margin:0 auto;}
+.page-title{font-size:1.6rem;font-weight:800;margin-bottom:6px;color:white;}
+.page-subtitle{font-size:.78rem;color:#64748b;margin-bottom:28px;}
+.card{background:#1a2d56;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:24px;margin-bottom:24px;}
+.card-title{font-size:1rem;font-weight:700;margin-bottom:20px;color:white;}
+.form-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:12px;align-items:end;}
+label{display:block;font-size:.7rem;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+input,select{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:white;padding:9px 12px;font-size:.82rem;border-radius:6px;outline:none;transition:border .15s;}
+input:focus,select:focus{border-color:#2563eb;}
+select option{background:#1a2d56;}
+.alert{padding:10px 14px;font-size:.78rem;margin-bottom:16px;display:none;border-radius:6px;}
+.alert-err{background:#ef444420;border:1px solid #ef4444;color:#ef4444;}
+.alert-ok{background:#05966920;border:1px solid #059669;color:#059669;}
+table{width:100%;border-collapse:collapse;}
+th{text-align:left;font-size:.65rem;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.1em;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.08);}
+td{padding:12px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:.82rem;}
+tr:hover td{background:rgba(255,255,255,0.03);}
+.badge{font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:10px;}
+.badge-super{background:#f59e0b20;color:#f59e0b;}
+.badge-admin{background:#2563eb20;color:#60a5fa;}
+.badge-prof{background:#05966920;color:#34d399;}
+.badge-demo{background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);}
+.empty{text-align:center;padding:32px;color:#64748b;font-size:.82rem;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:#1a2d56;border:1px solid rgba(255,255,255,0.1);border-radius:10px;width:90%;max-width:420px;padding:24px;}
+.modal-title{font-weight:700;font-size:1rem;margin-bottom:20px;color:white;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-text">مدرستي</div>
+    <div>
+      <div style="font-size:.7rem;color:rgba(255,255,255,.4);">ADMINISTRATION</div>
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <a href="/" class="btn btn-outline" style="text-decoration:none;"><i class="fas fa-arrow-left"></i> Application</a>
+    <button onclick="doLogout()" class="btn btn-outline"><i class="fas fa-sign-out-alt"></i> Déconnexion</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-title">👥 Gestion des utilisateurs</div>
+  <div class="page-subtitle">Créez et gérez les comptes administrateurs de Madrasati</div>
+
+  <div class="card">
+    <div class="card-title">➕ Créer un nouveau compte</div>
+    <div id="add-alert" class="alert"></div>
+    <div class="form-row">
+      <div>
+        <label>Nom</label>
+        <input id="new-nom" type="text" placeholder="Benali">
+      </div>
+      <div>
+        <label>Prénom</label>
+        <input id="new-prenom" type="text" placeholder="Mohammed">
+      </div>
+      <div>
+        <label>Email</label>
+        <input id="new-email" type="email" placeholder="m.benali@ecole.ma">
+      </div>
+      <div>
+        <label>Mot de passe</label>
+        <input id="new-password" type="password" placeholder="Min. 6 caractères">
+      </div>
+      <div>
+        <button class="btn btn-primary" onclick="createUser()"><i class="fas fa-plus"></i> Créer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Comptes existants</div>
+    <div id="users-alert" class="alert"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Rôle</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="users-tbody">
+        <tr><td colspan="4" class="empty">Chargement...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal reset -->
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal">
+    <div class="modal-title">🔑 Réinitialiser le mot de passe</div>
+    <div id="reset-alert" class="alert"></div>
+    <div style="margin-bottom:4px;">
+      <label>Nouveau mot de passe pour <strong id="reset-user-name" style="color:#60a5fa;"></strong></label>
+      <input id="reset-password" type="password" placeholder="Min. 6 caractères">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeResetModal()">Annuler</button>
+      <button class="btn btn-primary" onclick="confirmReset()"><i class="fas fa-save"></i> Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let resetUserId = null;
+
+async function loadUsers() {
+  const r = await fetch('/api/users');
+  if (r.status === 403 || r.status === 401) { window.location.href = '/'; return; }
+  const users = await r.json();
+  const tbody = document.getElementById('users-tbody');
+  const editable = users.filter(u => u.role !== 'super' && u.role !== 'demo' && u.actif != 0);
+  if (!editable.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">Aucun utilisateur admin</td></tr>'; return; }
+  tbody.innerHTML = users.filter(u => u.actif != 0).map(u => `
+    <tr>
+      <td><strong>${u.prenom} ${u.nom}</strong></td>
+      <td style="font-size:.75rem;color:#94a3b8;">${u.email}</td>
+      <td><span class="badge badge-${u.role}">${
+        u.role === 'super' ? '👑 Super Admin' :
+        u.role === 'admin' ? '🔧 Admin' :
+        u.role === 'prof'  ? '👨‍🏫 Prof' :
+        u.role === 'demo'  ? '⏱ Démo' : u.role
+      }</span></td>
+      <td style="display:flex;gap:6px;">
+        ${u.role !== 'super' && u.role !== 'demo' ? `
+          <button class="btn btn-warn" onclick="openResetModal(${u.id}, '${u.prenom} ${u.nom}')">🔑 Réinit. MDP</button>
+          <button class="btn btn-danger" onclick="deleteUser(${u.id}, '${u.prenom} ${u.nom}')">🗑 Désactiver</button>
+        ` : '<span style="color:#475569;font-size:.72rem;">—</span>'}
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function createUser() {
+  const nom = document.getElementById('new-nom').value.trim();
+  const prenom = document.getElementById('new-prenom').value.trim();
+  const email = document.getElementById('new-email').value.trim();
+  const password = document.getElementById('new-password').value;
+  if (!nom || !prenom || !email || !password) { showAlert('add-alert', 'Remplissez tous les champs', 'err'); return; }
+  const r = await fetch('/api/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nom, prenom, email, password, role: 'admin' })
+  });
+  const d = await r.json();
+  if (!r.ok) { showAlert('add-alert', d.error, 'err'); return; }
+  showAlert('add-alert', `✔ Compte créé pour ${prenom} ${nom}`, 'ok');
+  ['new-nom','new-prenom','new-email','new-password'].forEach(id => document.getElementById(id).value = '');
+  loadUsers();
+}
+
+async function deleteUser(id, nom) {
+  if (!confirm(`Désactiver le compte de ${nom} ?`)) return;
+  const r = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+  const d = await r.json();
+  if (!r.ok) { showAlert('users-alert', d.error, 'err'); return; }
+  showAlert('users-alert', `✔ Compte de ${nom} désactivé`, 'ok');
+  loadUsers();
+}
+
+function openResetModal(id, nom) {
+  resetUserId = id;
+  document.getElementById('reset-user-name').textContent = nom;
+  document.getElementById('reset-password').value = '';
+  document.getElementById('reset-alert').style.display = 'none';
+  document.getElementById('reset-modal').classList.add('open');
+}
+function closeResetModal() { document.getElementById('reset-modal').classList.remove('open'); resetUserId = null; }
+
+async function confirmReset() {
+  const newPassword = document.getElementById('reset-password').value;
+  if (!newPassword || newPassword.length < 6) { showAlert('reset-alert', 'Minimum 6 caractères', 'err'); return; }
+  const r = await fetch(`/api/users/${resetUserId}/reset-password`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ newPassword })
+  });
+  const d = await r.json();
+  if (!r.ok) { showAlert('reset-alert', d.error, 'err'); return; }
+  closeResetModal();
+  showAlert('users-alert', '✔ Mot de passe réinitialisé', 'ok');
+}
+
+function showAlert(id, msg, type) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = `alert alert-${type === 'err' ? 'err' : 'ok'}`;
+  el.style.display = 'block';
+  if (type !== 'err') setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+async function doLogout() {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/';
+}
+
+loadUsers();
+</script>
+</body>
+</html>
