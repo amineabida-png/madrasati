@@ -1,15 +1,15 @@
 const fs = require('fs');
 const path = require('path');
+const jwt = require('jsonwebtoken');
+const SECRET = 'madrasati_secret_2024_maroc';
 
 const TRIAL_FILE = path.join(__dirname, '../data/trial.json');
-const TRIAL_DURATION = 48 * 60 * 60 * 1000; // 48h en millisecondes
+const TRIAL_DURATION = 48 * 60 * 60 * 1000; // 48h
+const TRIAL_EMAIL = 'demo@madrasati.ma';
 
 function initTrial() {
   if (!fs.existsSync(TRIAL_FILE)) {
-    const trial = {
-      start: Date.now(),
-      expires: Date.now() + TRIAL_DURATION
-    };
+    const trial = { start: Date.now(), expires: Date.now() + TRIAL_DURATION };
     fs.mkdirSync(path.dirname(TRIAL_FILE), { recursive: true });
     fs.writeFileSync(TRIAL_FILE, JSON.stringify(trial));
   }
@@ -27,18 +27,26 @@ function getTrialInfo() {
 }
 
 function trialMiddleware(req, res, next) {
-  // Ne bloque pas les routes statiques ni /api/trial
   if (req.path === '/api/trial' || req.path === '/trial-expired.html') return next();
   if (!req.path.startsWith('/api/')) return next();
-  // Bloque les API si expiré
-  const { expired, hours, minutes } = getTrialInfo();
-  if (expired) {
-    return res.status(403).json({
-      error: 'Version de démonstration expirée. Contactez l\'administrateur.',
-      trial_expired: true
-    });
-  }
+
+  const token = req.cookies?.token || req.headers['authorization']?.replace('Bearer ', '');
+  if (!token) return next();
+
+  try {
+    const user = jwt.verify(token, SECRET);
+    if (user.email === TRIAL_EMAIL) {
+      const { expired } = getTrialInfo();
+      if (expired) {
+        return res.status(403).json({
+          error: "Votre version d'essai de 48h est expirée.",
+          trial_expired: true
+        });
+      }
+    }
+  } catch(e) {}
+
   next();
 }
 
-module.exports = { initTrial, getTrialInfo, trialMiddleware };
+module.exports = { initTrial, getTrialInfo, trialMiddleware, TRIAL_EMAIL };
