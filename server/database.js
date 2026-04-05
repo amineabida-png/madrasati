@@ -45,7 +45,7 @@ async function initSchema(db) {
       prenom TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
-      role TEXT NOT NULL CHECK(role IN ('admin','prof','eleve','parent')),
+      role TEXT NOT NULL CHECK(role IN ('super','admin','prof','eleve','parent')),
       telephone TEXT,
       adresse TEXT,
       date_naissance TEXT,
