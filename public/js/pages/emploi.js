@@ -8,7 +8,7 @@ async function renderEmploi(container) {
   container.innerHTML = `
     <div class="page-header">
       <div class="page-title">Emploi du temps</div>
-      ${currentUser.role==='admin'?`<button class="btn btn-primary" onclick="openAddCreneaux()"><i class="fas fa-plus"></i> Ajouter créneau</button>`:''}
+      ${(currentUser.role==='admin'||currentUser.role==='super')?`<button class="btn btn-primary" onclick="openAddCreneaux()"><i class="fas fa-plus"></i> Ajouter créneau</button>`:''}
     </div>
     <div class="filter-bar">
       <select id="edt-classe" class="form-select" onchange="loadEmploi()" style="min-width:180px;">
@@ -72,7 +72,7 @@ async function loadEmploi() {
             <div style="font-weight:700;">${slot.matiere_nom}</div>
             <div style="opacity:0.85;font-size:10px;">${slot.prof_prenom} ${slot.prof_nom}</div>
             ${slot.salle?`<div style="opacity:0.7;font-size:10px;"><i class="fas fa-door-open"></i> ${slot.salle}</div>`:''}
-            ${currentUser.role==='admin'?`<button onclick="deleteCreneaux(${slot.id})" style="background:rgba(0,0,0,0.3);border:none;color:white;padding:1px 6px;border-radius:3px;font-size:10px;cursor:pointer;margin-top:2px;">×</button>`:''}
+            ${(currentUser.role==='admin'||currentUser.role==='super')?`<button onclick="deleteCreneaux(${slot.id})" style="background:rgba(0,0,0,0.3);border:none;color:white;padding:1px 6px;border-radius:3px;font-size:10px;cursor:pointer;margin-top:2px;">×</button>`:''}
           </div>`).join('') + '</div>';
       } else {
         html += `<div class="timetable-cell" style="background:var(--bg);opacity:0.4;"></div>`;

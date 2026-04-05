@@ -67,7 +67,7 @@ async function loadNotesClasse() {
   const activeMatieres = matiereId ? matieres.filter(m=>m.id==matiereId) : matieres;
   container.innerHTML = `
     <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-      ${(currentUser.role==='admin'||currentUser.role==='prof')?`<button class="btn btn-primary btn-sm" onclick="openAddNote()"><i class="fas fa-plus"></i> Ajouter une note</button>`:'' }
+      ${((currentUser.role==='admin'||currentUser.role==='super')||currentUser.role==='prof')?`<button class="btn btn-primary btn-sm" onclick="openAddNote()"><i class="fas fa-plus"></i> Ajouter une note</button>`:'' }
     </div>
     <div class="card" style="padding:0;overflow-x:auto;">
       <table>

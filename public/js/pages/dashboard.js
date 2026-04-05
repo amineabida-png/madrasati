@@ -120,7 +120,7 @@ async function renderDashboard(container) {
   `;
 
   // Raccourcis rapides
-  if (currentUser.role === 'admin') {
+  if ((currentUser.role === 'admin' || currentUser.role === 'super')) {
     const quickActions = document.createElement('div');
     quickActions.style.cssText = 'display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;';
     quickActions.innerHTML = `

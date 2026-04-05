@@ -1,6 +1,6 @@
 async function renderAnnonces(container) {
   const annonces = await API.get('/api/annonces');
-  const canPost = currentUser.role==='admin'||currentUser.role==='prof';
+  const canPost = (currentUser.role==='admin'||currentUser.role==='super')||currentUser.role==='prof';
   container.innerHTML = `
     <div class="page-header">
       <div><div class="page-title">Annonces & Communication</div><div class="page-sub">Informations de l'établissement</div></div>
@@ -29,7 +29,7 @@ function renderAnnonceCard(a) {
             <span><i class="fas fa-clock"></i> ${formatDate(a.date_publication)}</span>
           </div>
         </div>
-        ${currentUser.role==='admin'?`
+        ${(currentUser.role==='admin'||currentUser.role==='super')?`
           <button class="btn btn-outline btn-sm btn-icon" title="Supprimer" style="color:var(--danger);flex-shrink:0;" onclick="supprimerAnnonce(${a.id},'${a.titre.replace(/'/g,"\\'")}')">
             <i class="fas fa-trash"></i>
           </button>`:''

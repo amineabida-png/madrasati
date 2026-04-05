@@ -3,7 +3,7 @@ async function renderFacturation(container) {
   container.innerHTML = `
     <div class="page-header">
       <div><div class="page-title">Facturation & Paiements</div><div class="page-sub">Suivi financier</div></div>
-      ${currentUser.role==='admin'?`<button class="btn btn-primary" onclick="openAddFacture()"><i class="fas fa-plus"></i> Nouvelle facture</button>`:''}
+      ${(currentUser.role==='admin'||currentUser.role==='super')?`<button class="btn btn-primary" onclick="openAddFacture()"><i class="fas fa-plus"></i> Nouvelle facture</button>`:''}
     </div>
     <!-- Stats -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;">
@@ -76,7 +76,7 @@ function renderFacturesList(factures) {
                 <td>
                   <div style="display:flex;gap:5px;">
                     <button class="btn btn-outline btn-sm btn-icon" title="Voir détail" onclick="viewFacture(${f.id})"><i class="fas fa-eye"></i></button>
-                    ${f.statut!=='payee'&&currentUser.role==='admin'?`<button class="btn btn-success btn-sm" onclick="openPaiement(${f.id},'${f.numero}',${f.montant-f.montant_paye})"><i class="fas fa-cash-register"></i> Payer</button>`:''}
+                    ${f.statut!=='payee'&&(currentUser.role==='admin'||currentUser.role==='super')?`<button class="btn btn-success btn-sm" onclick="openPaiement(${f.id},'${f.numero}',${f.montant-f.montant_paye})"><i class="fas fa-cash-register"></i> Payer</button>`:''}
                     <button class="btn btn-outline btn-sm btn-icon" title="Imprimer" onclick="imprimerFacture(${f.id})"><i class="fas fa-print"></i></button>
                   </div>
                 </td>
@@ -242,7 +242,7 @@ async function viewFacture(id) {
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal()">Fermer</button>
       <button class="btn btn-outline" onclick="imprimerFacture(${f.id});closeModal()"><i class="fas fa-print"></i> Imprimer</button>
-      ${f.statut!=='payee'&&currentUser.role==='admin'?`<button class="btn btn-success" onclick="closeModal();openPaiement(${f.id},'${f.numero}',${f.montant-f.montant_paye})"><i class="fas fa-cash-register"></i> Payer</button>`:''}
+      ${f.statut!=='payee'&&(currentUser.role==='admin'||currentUser.role==='super')?`<button class="btn btn-success" onclick="closeModal();openPaiement(${f.id},'${f.numero}',${f.montant-f.montant_paye})"><i class="fas fa-cash-register"></i> Payer</button>`:''}
     </div>`,`max-w-2xl`);
 }
 

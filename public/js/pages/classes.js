@@ -11,7 +11,7 @@ async function renderClasses(container) {
         <div class="page-title">Classes & Groupes <span style="font-size:14px;color:var(--muted);font-weight:400;">(${classes.length})</span></div>
         <div class="page-sub">Organisation pédagogique</div>
       </div>
-      ${currentUser.role==='admin'?`<button class="btn btn-primary" onclick="openAddClasse(${JSON.stringify(niveaux).replace(/"/g,'&quot;')},${JSON.stringify(profs).replace(/"/g,'&quot;')})"><i class="fas fa-plus"></i> Nouvelle classe</button>`:''}
+      ${(currentUser.role==='admin'||currentUser.role==='super')?`<button class="btn btn-primary" onclick="openAddClasse(${JSON.stringify(niveaux).replace(/"/g,'&quot;')},${JSON.stringify(profs).replace(/"/g,'&quot;')})"><i class="fas fa-plus"></i> Nouvelle classe</button>`:''}
     </div>
 
     <!-- Niveaux -->

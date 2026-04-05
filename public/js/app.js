@@ -294,12 +294,12 @@ async function initApp() {
     // Check trial after user is loaded
     setTimeout(checkTrial, 1000);
     // Check abonnement pour les admins (pas pour demo ni super)
-    if (currentUser.role === 'admin' && currentUser.email !== 'demo@madrasati.ma') {
+    if ((currentUser.role === 'admin' || currentUser.role === 'super') && currentUser.email !== 'demo@madrasati.ma') {
       setTimeout(checkSubscription, 1500);
       setInterval(checkSubscription, 300000);
     }
     // Update badge
-    if (currentUser.role === 'admin') {
+    if ((currentUser.role === 'admin' || currentUser.role === 'super')) {
       const stats = await API.get('/api/factures/stats/summary');
       const badge = document.getElementById('badge-impayees');
       if (badge && stats.nb_impayees > 0) { badge.style.display = 'inline-flex'; badge.textContent = stats.nb_impayees; }
@@ -388,6 +388,10 @@ function openChangePassword() {
     </div>
     <div class="modal-body">
       <div class="form-group">
+        <label class="form-label">Mot de passe actuel *</label>
+        <input id="pwd-current" class="form-input" type="password" placeholder="Votre mot de passe actuel">
+      </div>
+      <div class="form-group">
         <label class="form-label">Nouveau mot de passe *</label>
         <input id="pwd-new" class="form-input" type="password" placeholder="Minimum 6 caractères">
       </div>
@@ -404,13 +408,15 @@ function openChangePassword() {
 }
 
 async function saveNewPassword() {
+  const current = document.getElementById('pwd-current').value;
   const pwd = document.getElementById('pwd-new').value;
   const confirm = document.getElementById('pwd-confirm').value;
+  if (!current) return toast('Entrez votre mot de passe actuel', 'error');
   if (!pwd || pwd.length < 6) return toast('Mot de passe trop court (min. 6 caractères)', 'error');
   if (pwd !== confirm) return toast('Les mots de passe ne correspondent pas', 'error');
   try {
     loading(true);
-    await API.put(`/api/users/${currentUser.id}/password`, { password: pwd });
+    await API.put(`/api/users/${currentUser.id}/password`, { currentPassword: current, password: pwd });
     loading(false);
     closeModal();
     toast('Mot de passe changé avec succès ! Reconnectez-vous.');

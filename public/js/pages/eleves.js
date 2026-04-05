@@ -12,7 +12,7 @@ async function renderEleves(container) {
 }
 
 function renderElevesTable(container, eleves, classes) {
-  const canEdit = currentUser.role === 'admin';
+  const canEdit = (currentUser.role === 'admin' || currentUser.role === 'super');
   container.innerHTML = `
     <div class="page-header">
       <div>
@@ -77,7 +77,7 @@ function renderElevesRows(eleves) {
       <td>
         <div style="display:flex;gap:6px;">
           <button class="btn btn-outline btn-sm btn-icon" title="Voir profil" onclick="viewEleve(${e.id})"><i class="fas fa-eye"></i></button>
-          ${currentUser.role === 'admin' ? `
+          ${(currentUser.role === 'admin' || currentUser.role === 'super') ? `
           <button class="btn btn-outline btn-sm btn-icon" title="Modifier" onclick="editEleve(${e.id})"><i class="fas fa-edit"></i></button>
           <button class="btn btn-outline btn-sm btn-icon" title="Supprimer" style="color:var(--danger)" onclick="deleteEleve(${e.id},'${e.prenom} ${e.nom}')"><i class="fas fa-trash"></i></button>
           ` : ''}
@@ -139,7 +139,7 @@ async function viewEleve(id) {
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal()">Fermer</button>
-      ${currentUser.role==='admin'?`<button class="btn btn-primary" onclick="closeModal();editEleve(${e.id})"><i class="fas fa-edit"></i> Modifier</button>`:''}
+      ${(currentUser.role==='admin'||currentUser.role==='super')?`<button class="btn btn-primary" onclick="closeModal();editEleve(${e.id})"><i class="fas fa-edit"></i> Modifier</button>`:''}
     </div>
   `);
 }

@@ -8,7 +8,7 @@ async function renderProfs(container) {
         <div class="page-title">Enseignants <span style="font-size:14px;color:var(--muted);font-weight:400;">(${profs.length})</span></div>
         <div class="page-sub">Gestion du corps enseignant</div>
       </div>
-      ${currentUser.role==='admin'?`<button class="btn btn-primary" onclick="openAddProf()"><i class="fas fa-plus"></i> Ajouter enseignant</button>`:''}
+      ${(currentUser.role==='admin'||currentUser.role==='super')?`<button class="btn btn-primary" onclick="openAddProf()"><i class="fas fa-plus"></i> Ajouter enseignant</button>`:''}
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
       ${profs.map(p => `
@@ -26,7 +26,7 @@ async function renderProfs(container) {
             <div><i class="fas fa-school" style="color:var(--muted);width:18px;"></i> ${p.nb_classes} classe(s)</div>
             ${p.matieres ? `<div><i class="fas fa-book" style="color:var(--muted);width:18px;"></i> ${p.matieres}</div>` : ''}
           </div>
-          ${currentUser.role==='admin'?`
+          ${(currentUser.role==='admin'||currentUser.role==='super')?`
           <div style="display:flex;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
             <button class="btn btn-outline btn-sm" style="flex:1;" onclick="editProf(${p.id})"><i class="fas fa-edit"></i> Modifier</button>
           </div>`:''} 
