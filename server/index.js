@@ -499,11 +499,13 @@ app.post('/api/users', authMiddleware, requireRole('super'), async (req, res) =>
   const { nom, prenom, email, password, role, telephone } = req.body;
   if (!nom || !prenom || !email || !password) return res.status(400).json({ error: 'Champs manquants' });
   if (password.length < 6) return res.status(400).json({ error: 'Mot de passe trop court (min 6 caractères)' });
+  const validRoles = ['admin', 'prof', 'parent', 'eleve'];
+  const finalRole = validRoles.includes(role) ? role : 'admin';
   const existing = await query('SELECT id FROM users WHERE email = ?', [email]);
   if (existing.length) return res.status(400).json({ error: 'Email déjà utilisé' });
   const hashed = bcrypt.hashSync(password, 10);
   await run('INSERT INTO users (nom, prenom, email, password, role, telephone) VALUES (?,?,?,?,?,?)',
-    [nom, prenom, email, hashed, role || 'admin', telephone || '']);
+    [nom, prenom, email, hashed, finalRole, telephone || '']);
   res.json({ ok: true });
 });
 
