@@ -165,6 +165,22 @@ const globalSearch = debounce(async (val) => {
   document.addEventListener('click', () => div.remove(), { once: true });
 }, 300);
 
+
+// ─── LOGIN DEMO ───────────────────────────────────────────
+async function loginDemo() {
+  const btn = document.getElementById('demo-btn');
+  btn.innerHTML = '<span>⏳ Chargement...</span>';
+  btn.disabled = true;
+  try {
+    const { user } = await API.login('demo@madrasati.ma', 'eleve123');
+    currentUser = user;
+    initApp();
+  } catch(err) {
+    btn.innerHTML = '<span>🚀 Essayer Madrasati</span><span style="font-size:10px;background:rgba(245,158,11,0.2);color:#f59e0b;padding:2px 8px;border-radius:4px;font-weight:700;">48H GRATUIT</span>';
+    btn.disabled = false;
+  }
+}
+
 // LOGIN
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -213,8 +229,8 @@ async function initApp() {
     showPage('dashboard');
     // Check trial after user is loaded
     setTimeout(checkTrial, 1000);
-    // Check abonnement pour les admins
-    if (currentUser.role === 'admin') {
+    // Check abonnement pour les admins (pas pour demo ni super)
+    if (currentUser.role === 'admin' && currentUser.email !== 'demo@madrasati.ma') {
       setTimeout(checkSubscription, 1500);
       setInterval(checkSubscription, 300000);
     }
