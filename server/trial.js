@@ -7,7 +7,7 @@ const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH
   ? process.env.RAILWAY_VOLUME_MOUNT_PATH
   : path.join(__dirname, '../data');
 const TRIAL_FILE = path.join(DATA_DIR, 'trial_ips.json');
-const TRIAL_DURATION = 48 * 60 * 60 * 1000; // 48h
+const TRIAL_DURATION = 24 * 60 * 60 * 1000; // 24h
 const TRIAL_EMAIL = 'demo@madrasati.ma';
 
 // Récupère l'IP réelle du visiteur (Railway utilise un proxy)
@@ -73,7 +73,7 @@ function trialMiddleware(req, res, next) {
       const { expired } = getTrialInfoForIP(ip);
       if (expired) {
         return res.status(403).json({
-          error: "Votre version d'essai de 48h est expirée.",
+          error: "Votre version d'essai de 24h est expirée.",
           trial_expired: true
         });
       }
