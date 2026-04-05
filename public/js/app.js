@@ -220,6 +220,9 @@ initApp();
 // TRIAL CHECK
 async function checkTrial() {
   try {
+    if (!currentUser) return;
+    // Bannière uniquement pour le compte demo
+    if (currentUser.email !== 'demo@madrasati.ma') return;
     const t = await API.get('/api/trial');
     if (t.expired) {
       document.body.innerHTML = '';
