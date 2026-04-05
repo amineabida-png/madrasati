@@ -106,6 +106,7 @@ tr:hover td{background:rgba(255,255,255,0.03);}
           <th>Nom</th>
           <th>Email</th>
           <th>Rôle</th>
+          <th>Abonnement</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -135,14 +136,33 @@ tr:hover td{background:rgba(255,255,255,0.03);}
 <script>
 let resetUserId = null;
 
+function subBadge(u) {
+  if (u.role === 'super' || u.role === 'demo') return '<span style="font-size:.7rem;color:#475569;">—</span>';
+  const s = u.subscription;
+  if (!s || s.expired) return '<span style="background:#ef444420;color:#ef4444;padding:3px 8px;font-size:.65rem;border-radius:4px;">❌ EXPIRÉ</span>';
+  if (s.warning) return `<span style="background:#ef444420;color:#ef4444;padding:3px 8px;font-size:.65rem;border-radius:4px;">🔴 ${s.daysLeft}j restants</span>`;
+  if (s.attention) return `<span style="background:#f59e0b20;color:#f59e0b;padding:3px 8px;font-size:.65rem;border-radius:4px;">🟡 ${s.daysLeft}j restants</span>`;
+  return `<span style="background:#05966920;color:#34d399;padding:3px 8px;font-size:.65rem;border-radius:4px;">🟢 ${s.daysLeft}j restants</span>`;
+}
+
 async function loadUsers() {
   const r = await fetch('/api/users');
   if (r.status === 403 || r.status === 401) { window.location.href = '/'; return; }
   const users = await r.json();
   const tbody = document.getElementById('users-tbody');
-  const editable = users.filter(u => u.role !== 'super' && u.role !== 'demo' && u.actif != 0);
-  if (!editable.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">Aucun utilisateur admin</td></tr>'; return; }
-  tbody.innerHTML = users.filter(u => u.actif != 0).map(u => `
+
+  // Alertes abonnements critiques
+  const critiques = users.filter(u => u.subscription && !u.subscription.unlimited && (u.subscription.expired || u.subscription.warning));
+  if (critiques.length) {
+    const alertDiv = document.getElementById('users-alert');
+    alertDiv.className = 'alert alert-err';
+    alertDiv.innerHTML = '⚠️ ' + critiques.map(u => `<strong>${u.prenom} ${u.nom}</strong>: ${u.subscription.expired ? 'EXPIRÉ' : u.subscription.daysLeft + 'j restants'}`).join(' · ');
+    alertDiv.style.display = 'block';
+  }
+
+  const visible = users.filter(u => u.actif != 0);
+  if (!visible.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Aucun utilisateur</td></tr>'; return; }
+  tbody.innerHTML = visible.map(u => `
     <tr>
       <td><strong>${u.prenom} ${u.nom}</strong></td>
       <td style="font-size:.75rem;color:#94a3b8;">${u.email}</td>
@@ -152,14 +172,29 @@ async function loadUsers() {
         u.role === 'prof'  ? '👨‍🏫 Prof' :
         u.role === 'demo'  ? '⏱ Démo' : u.role
       }</span></td>
-      <td style="display:flex;gap:6px;">
+      <td>${subBadge(u)}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;">
         ${u.role !== 'super' && u.role !== 'demo' ? `
-          <button class="btn btn-warn" onclick="openResetModal(${u.id}, '${u.prenom} ${u.nom}')">🔑 Réinit. MDP</button>
-          <button class="btn btn-danger" onclick="deleteUser(${u.id}, '${u.prenom} ${u.nom}')">🗑 Désactiver</button>
+          <button class="btn btn-warn" onclick="openResetModal(${u.id}, '${u.prenom} ${u.nom}')">🔑 MDP</button>
+          <button class="btn" style="background:transparent;border:1px solid #34d399;color:#34d399;padding:6px 10px;font-size:.72px;border-radius:4px;cursor:pointer;" onclick="renewUser(${u.id}, '${u.prenom} ${u.nom}')">🔄 +30j</button>
+          <button class="btn btn-danger" onclick="deleteUser(${u.id}, '${u.prenom} ${u.nom}')">🗑</button>
         ` : '<span style="color:#475569;font-size:.72rem;">—</span>'}
       </td>
     </tr>
   `).join('');
+}
+
+async function renewUser(id, nom) {
+  if (!confirm(`Renouveler l'abonnement de ${nom} pour 30 jours ?`)) return;
+  const r = await fetch(`/api/users/${id}/renew`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ months: 1 })
+  });
+  const d = await r.json();
+  if (!r.ok) { showAlert('users-alert', d.error, 'err'); return; }
+  showAlert('users-alert', `✔ Abonnement de ${nom} renouvelé — expire le ${new Date(d.subscriptionEnd).toLocaleDateString('fr-MA')}`, 'ok');
+  loadUsers();
 }
 
 async function createUser() {

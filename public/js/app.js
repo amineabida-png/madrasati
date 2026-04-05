@@ -213,6 +213,11 @@ async function initApp() {
     showPage('dashboard');
     // Check trial after user is loaded
     setTimeout(checkTrial, 1000);
+    // Check abonnement pour les admins
+    if (currentUser.role === 'admin') {
+      setTimeout(checkSubscription, 1500);
+      setInterval(checkSubscription, 300000);
+    }
     // Update badge
     if (currentUser.role === 'admin') {
       const stats = await API.get('/api/factures/stats/summary');
@@ -257,6 +262,36 @@ async function checkTrial() {
       banner.style.display = 'block';
       const countdown = document.getElementById('trial-countdown');
       if (countdown) countdown.textContent = `${t.hours}h ${t.minutes}min`;
+    }
+  } catch(e) {}
+}
+
+
+// ─── ABONNEMENT ──────────────────────────────────────────
+async function checkSubscription() {
+  try {
+    const r = await fetch('/api/subscription');
+    const s = await r.json();
+    if (s.unlimited) return;
+    if (s.expired) {
+      document.getElementById('content').innerHTML = `
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;padding:40px;">
+          <div style="font-size:3rem;margin-bottom:16px;">🔒</div>
+          <h2 style="margin-bottom:8px;">Abonnement expiré</h2>
+          <p style="color:var(--muted);margin-bottom:24px;">Votre abonnement mensuel a expiré. Contactez l'administrateur pour le renouveler.</p>
+          <button onclick="logout()" class="btn btn-primary">Se déconnecter</button>
+        </div>`;
+      return;
+    }
+    if (s.warning || s.attention) {
+      let banner = document.getElementById('sub-banner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'sub-banner';
+        banner.style.cssText = `position:fixed;bottom:0;left:0;right:0;z-index:9998;background:${s.warning ? 'linear-gradient(90deg,#dc2626,#b91c1c)' : 'linear-gradient(90deg,#d97706,#b45309)'};color:white;padding:10px 20px;text-align:center;font-size:13px;font-weight:600;`;
+        document.body.appendChild(banner);
+      }
+      banner.textContent = `${s.warning ? '🔴' : '🟡'} ABONNEMENT — ${s.daysLeft} jour(s) restants · Contactez votre administrateur`;
     }
   } catch(e) {}
 }

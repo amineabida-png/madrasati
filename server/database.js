@@ -51,6 +51,7 @@ async function initSchema(db) {
       date_naissance TEXT,
       photo TEXT,
       actif INTEGER DEFAULT 1,
+      subscriptionEnd TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
 

@@ -15,6 +15,25 @@ app.use(cors({ credentials: true, origin: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(trialMiddleware);
 
+
+// ─── ABONNEMENT ───────────────────────────────────────────────────────────────
+
+function getSubscriptionInfo(user) {
+  if (user.role === 'super' || user.role === 'demo') return { active: true, unlimited: true };
+  if (!user.subscriptionEnd) return { active: false, expired: true, daysLeft: 0 };
+  const now = Date.now();
+  const end = new Date(user.subscriptionEnd).getTime();
+  const daysLeft = Math.ceil((end - now) / 86400000);
+  return {
+    active: daysLeft > 0,
+    expired: daysLeft <= 0,
+    daysLeft: Math.max(0, daysLeft),
+    subscriptionEnd: user.subscriptionEnd,
+    warning: daysLeft > 0 && daysLeft <= 7,
+    attention: daysLeft > 7 && daysLeft <= 15
+  };
+}
+
 // ─── TRIAL ───────────────────────────────────────────────────────────────────
 app.get('/api/trial', (req, res) => {
   res.json(getTrialInfo(req));
@@ -470,8 +489,8 @@ app.delete('/api/annonces/:id', authMiddleware, requireRole('admin'), async (req
 // ─── USERS ───────────────────────────────────────────────────────────────────
 
 app.get('/api/users', authMiddleware, requireRole('admin', 'super'), async (req, res) => {
-  const rows = await query('SELECT id, nom, prenom, email, role, telephone, actif, created_at FROM users ORDER BY nom');
-  res.json(rows);
+  const rows = await query('SELECT id, nom, prenom, email, role, telephone, actif, subscriptionEnd, created_at FROM users ORDER BY nom');
+  res.json(rows.map(u => ({ ...u, subscription: getSubscriptionInfo(u) })));
 });
 
 // Créer un utilisateur (super admin uniquement)
@@ -521,6 +540,30 @@ app.put('/api/users/:id/password', authMiddleware, async (req, res) => {
   const hashed = bcrypt.hashSync(password, 10);
   await run('UPDATE users SET password=? WHERE id=?', [hashed, req.params.id]);
   res.json({ ok: true });
+});
+
+
+// ─── ABONNEMENT ROUTES ────────────────────────────────────────────────────────
+
+app.get('/api/subscription', authMiddleware, async (req, res) => {
+  if (req.user.role === 'super' || req.user.role === 'demo') return res.json({ unlimited: true });
+  const users = await query('SELECT * FROM users WHERE id = ?', [req.user.id]);
+  if (!users.length) return res.json({ expired: true });
+  const user = users[0];
+  res.json(getSubscriptionInfo(user));
+});
+
+app.put('/api/users/:id/renew', authMiddleware, requireRole('super'), async (req, res) => {
+  const { months } = req.body;
+  const days = (months || 1) * 30;
+  const users = await query('SELECT * FROM users WHERE id = ?', [req.params.id]);
+  if (!users.length) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+  const user = users[0];
+  const now = Date.now();
+  const currentEnd = user.subscriptionEnd ? new Date(user.subscriptionEnd).getTime() : now;
+  const newEnd = new Date(Math.max(now, currentEnd) + days * 86400000).toISOString();
+  await run('UPDATE users SET subscriptionEnd = ? WHERE id = ?', [newEnd, req.params.id]);
+  res.json({ ok: true, subscriptionEnd: newEnd, daysAdded: days });
 });
 
 // ─── PAGE ADMIN ───────────────────────────────────────────────────────────────
