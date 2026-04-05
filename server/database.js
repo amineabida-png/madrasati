@@ -19,6 +19,10 @@ async function getDB() {
   if (fs.existsSync(DB_PATH)) {
     const fileBuffer = fs.readFileSync(DB_PATH);
     db = new SQL.Database(fileBuffer);
+    // Migrations : ajouter colonnes manquantes si elles n'existent pas
+    try { db.run("ALTER TABLE users ADD COLUMN subscriptionEnd TEXT"); } catch(e) {}
+    try { db.run("ALTER TABLE users ADD COLUMN lifetime INTEGER DEFAULT 0"); } catch(e) {}
+    saveDB();
   } else {
     db = new SQL.Database();
     await initSchema(db);
