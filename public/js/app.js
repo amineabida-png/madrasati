@@ -222,7 +222,11 @@ async function checkTrial() {
   try {
     if (!currentUser) return;
     // Bannière uniquement pour le compte demo
-    if (currentUser.email !== 'demo@madrasati.ma') return;
+    if (currentUser.email !== 'demo@madrasati.ma') {
+      const banner = document.getElementById('trial-banner');
+      if (banner) banner.style.display = 'none';
+      return;
+    }
     const t = await API.get('/api/trial');
     if (t.expired) {
       document.body.innerHTML = '';
@@ -240,7 +244,7 @@ async function checkTrial() {
 
 // Check every minute
 setInterval(checkTrial, 60000);
-setTimeout(checkTrial, 2000);
+setTimeout(checkTrial, 3000);
 
 // ─── CHANGEMENT MOT DE PASSE ─────────────────────────────────────────────────
 function openChangePassword() {
