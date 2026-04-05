@@ -714,6 +714,8 @@ app.get('/api/reset-db-secret-2026', async (req, res) => {
 
 // ─── STATIC PAGES ─────────────────────────────────────────────────────────────
 
+app.get('/presentation', (req, res) => res.sendFile(path.join(__dirname, '../public/presentation.html')));
+app.get('/cgu', (req, res) => res.sendFile(path.join(__dirname, '../public/cgu.html')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
