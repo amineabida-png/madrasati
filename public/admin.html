@@ -193,12 +193,22 @@ async function loadUsers() {
         ${u.role !== 'super' && u.role !== 'demo' ? `
           <button class="btn btn-warn" onclick="openResetModal(${u.id}, '${u.prenom} ${u.nom}')">🔑 MDP</button>
           <button class="btn" style="background:transparent;border:1px solid #34d399;color:#34d399;padding:6px 10px;font-size:.72rem;border-radius:4px;cursor:pointer;" onclick="renewUser(${u.id}, '${u.prenom} ${u.nom}')">🔄 +30j</button>
+          <button class="btn" style="background:transparent;border:1px solid #0891b2;color:#0891b2;padding:6px 10px;font-size:.72rem;border-radius:4px;cursor:pointer;" onclick="renewYear(${u.id}, '${u.prenom} ${u.nom}')">📅 +1an</button>
           <button class="btn" style="background:transparent;border:1px solid #7c3aed;color:#7c3aed;padding:6px 10px;font-size:.72rem;border-radius:4px;cursor:pointer;" onclick="toggleLifetime(${u.id}, '${u.prenom} ${u.nom}', ${u.subscription && u.subscription.lifetime ? 'true' : 'false'})">${u.subscription && u.subscription.lifetime ? '♾️ Retirer vie' : '♾️ À vie'}</button>
           <button class="btn btn-danger" onclick="deleteUser(${u.id}, '${u.prenom} ${u.nom}')">🗑</button>
         ` : '<span style="color:#475569;font-size:.72rem;">—</span>'}
       </td>
     </tr>
   `).join('');
+}
+
+async function renewYear(id, nom) {
+  if (!confirm(`Renouveler l'abonnement de ${nom} pour 1 an (365 jours) ?`)) return;
+  const r = await fetch(`/api/users/${id}/renew`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ months: 12 }) });
+  const d = await r.json();
+  if (!r.ok) { showAlert('users-alert', d.error, 'err'); return; }
+  showAlert('users-alert', `✔ Abonnement annuel de ${nom} renouvelé jusqu'au ${new Date(d.subscriptionEnd).toLocaleDateString('fr-MA')}`, 'ok');
+  loadUsers();
 }
 
 async function toggleLifetime(id, nom, isLifetime) {
