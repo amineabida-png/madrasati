@@ -115,19 +115,19 @@ window.showPage = async function(page) {
   content.innerHTML = '<div style="display:flex;justify-content:center;padding:60px;"><div class="loader"></div></div>';
   try {
     switch(page) {
-      case 'dashboard': await renderDashboard(); break;
-      case 'eleves': await renderEleves(); break;
-      case 'profs': await renderProfs(); break;
-      case 'classes': await renderClasses(); break;
-      case 'emploi': await renderEmploi(); break;
-      case 'presences': await renderPresences(); break;
-      case 'notes': await renderNotes(); break;
-      case 'facturation': await renderFacturation(); break;
-      case 'annonces': await renderAnnonces(); break;
-      case 'messages': await renderMessages(); break;
-      case 'super-ecoles': await renderSuperEcoles(); break;
-      case 'super-stats': await renderSuperStats(); break;
-      case 'notifications': await renderNotifications(); break;
+      case 'dashboard': await renderDashboard(content); break;
+      case 'eleves': await renderEleves(content); break;
+      case 'profs': await renderProfs(content); break;
+      case 'classes': await renderClasses(content); break;
+      case 'emploi': await renderEmploi(content); break;
+      case 'presences': await renderPresences(content); break;
+      case 'notes': await renderNotes(content); break;
+      case 'facturation': await renderFacturation(content); break;
+      case 'annonces': await renderAnnonces(content); break;
+      case 'messages': await renderMessages(content); break;
+      case 'super-ecoles': await renderSuperEcoles(content); break;
+      case 'super-stats': await renderSuperStats(content); break;
+      case 'notifications': await renderNotifications(content); break;
       default: content.innerHTML = '<div class="empty-state"><div class="empty-icon">🚧</div><h3>Page en développement</h3></div>';
     }
   } catch(e) {
@@ -188,9 +188,7 @@ async function loadNotifPanel() {
   const list = document.getElementById('notif-list');
   list.innerHTML = '<div style="padding:16px; color:var(--muted); font-size:13px;">Chargement...</div>';
   try {
-    const token = localStorage.getItem('token');
-    const r = await fetch('/api/notifications', { headers: { Authorization: 'Bearer ' + token } });
-    const notifs = await r.json();
+    const notifs = await API.get('/api/notifications');
     if (!notifs.length) {
       list.innerHTML = '<div style="padding:24px; text-align:center; color:var(--muted); font-size:13px;">Aucune notification</div>';
       return;
@@ -207,27 +205,23 @@ async function loadNotifPanel() {
 }
 
 window.markNotifRead = async function(id, el) {
-  const token = localStorage.getItem('token');
-  await fetch('/api/notifications/' + id + '/lu', { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
+  await API.put('/api/notifications/' + id + '/lu', {});
   el.classList.remove('unread');
-  el.querySelector('div').style.fontWeight = '400';
   loadNotifCount();
 };
 
 window.markAllNotifsRead = async function() {
-  const token = localStorage.getItem('token');
-  await fetch('/api/notifications/all/lu', { method: 'PUT', headers: { Authorization: 'Bearer ' + token } });
+  await API.put('/api/notifications/all/lu', {});
   document.getElementById('notif-panel').style.display = 'none';
   loadNotifCount();
-  toast('Toutes les notifications marquées comme lues', 'success');
+  toast('Toutes les notifications marquées comme lues');
 };
 
-window.renderNotifications = async function() {
-  const token = localStorage.getItem('token');
-  const r = await fetch('/api/notifications', { headers: { Authorization: 'Bearer ' + token } });
-  const notifs = await r.json();
+window.renderNotifications = async function(container) {
+  if (!container) container = document.getElementById('content');
+  const notifs = await API.get('/api/notifications');
   const typeIcons = { note: '📝', absence: '🚨', facture: '💰', message: '✉️' };
-  document.getElementById('content').innerHTML = `
+  container.innerHTML = `
     <div class="page-header">
       <div><div class="page-title">Notifications</div></div>
       <button class="btn btn-outline btn-sm" onclick="markAllNotifsRead()"><i class="fas fa-check-double"></i> Tout marquer lu</button>
@@ -296,6 +290,7 @@ window.logout = async function() {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 function initApp(user) {
   APP.user = user;
+  window.currentUser = user; // alias global utilisé par toutes les pages
   document.getElementById('login-page').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   document.getElementById('sidebar-avatar').textContent = (user.prenom?.[0] || '') + (user.nom?.[0] || '');
@@ -370,15 +365,11 @@ window.savePassword = async function() {
   const np2 = document.getElementById('new-pwd2').value;
   if (np !== np2) return toast('Les mots de passe ne correspondent pas', 'error');
   if (np.length < 6) return toast('Mot de passe trop court (min 6 caractères)', 'error');
-  const token = localStorage.getItem('token');
-  const r = await fetch('/api/users/' + APP.user.id + '/password', {
-    method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-    body: JSON.stringify({ currentPassword: cur, password: np })
-  });
-  const data = await r.json();
-  if (!r.ok) return toast(data.error || 'Erreur', 'error');
-  toast('Mot de passe changé !', 'success');
-  closeModal();
+  try {
+    await API.put('/api/users/' + APP.user.id + '/password', { currentPassword: cur, password: np });
+    toast('Mot de passe changé !');
+    closeModal();
+  } catch(e) { toast(e.message, 'error'); }
 };
 
 // ── EXPORT ────────────────────────────────────────────────────────────────────
@@ -394,9 +385,11 @@ window.exportData = async function() {
 window.resetData = async function() {
   if (!confirm('⚠️ Êtes-vous sûr de vouloir réinitialiser toutes les données ?')) return;
   if (!confirm('Dernière confirmation — cette action est irréversible.')) return;
-  const token = localStorage.getItem('token');
-  const r = await fetch('/api/reset', { method: 'POST', headers: { Authorization: 'Bearer ' + token } });
-  if (r.ok) { toast('Données réinitialisées !', 'success'); setTimeout(() => location.reload(), 1500); }
+  try {
+    await API.post('/api/reset', {});
+    toast('Données réinitialisées !');
+    setTimeout(() => location.reload(), 1500);
+  } catch(e) { toast(e.message, 'error'); }
 };
 
 window.globalSearch = function(q) {

@@ -1,11 +1,12 @@
-window.renderSuperEcoles = async function() {
+window.renderSuperEcoles = async function(container) {
+  if (!container) container = document.getElementById('content');
   const token = localStorage.getItem('token');
   const ecoles = await fetch('/api/super/ecoles', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json());
 
   const abonBadge = { trial: 'badge-warning', mensuel: 'badge-info', annuel: 'badge-success', lifetime: 'badge-purple' };
   const abonLabel = { trial: 'Essai', mensuel: 'Mensuel', annuel: 'Annuel', lifetime: 'À vie' };
 
-  document.getElementById('content').innerHTML = `
+  container.innerHTML = `
     <div class="page-header">
       <div><div class="page-title">🏫 Gestion des Écoles</div><div class="page-sub">${ecoles.length} école(s) enregistrée(s)</div></div>
       <button class="btn btn-primary" onclick="openNewEcole()"><i class="fas fa-plus"></i> Nouvelle École</button>
@@ -41,14 +42,15 @@ window.renderSuperEcoles = async function() {
     </div>`;
 };
 
-window.renderSuperStats = async function() {
+window.renderSuperStats = async function(container) {
+  if (!container) container = document.getElementById('content');
   const token = localStorage.getItem('token');
   const stats = await fetch('/api/super/stats', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json());
 
   const abonColors = { trial: '#f59e0b', mensuel: '#3b82f6', annuel: '#10b981', lifetime: '#8b5cf6' };
   const abonLabels = { trial: 'Essai', mensuel: 'Mensuel', annuel: 'Annuel', lifetime: 'À vie' };
 
-  document.getElementById('content').innerHTML = `
+  container.innerHTML = `
     <div class="page-header"><div class="page-title">📊 Statistiques Globales</div></div>
     <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px; margin-bottom:24px;">
       <div class="stat-card">

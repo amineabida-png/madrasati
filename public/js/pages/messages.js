@@ -1,4 +1,5 @@
-window.renderMessages = async function() {
+window.renderMessages = async function(container) {
+  if (!container) container = document.getElementById('content');
   const [inbox, sent, contacts] = await Promise.all([
     API.get('/api/messages?type=inbox'),
     API.get('/api/messages?type=sent'),
@@ -29,7 +30,7 @@ window.renderMessages = async function() {
   }
 
   const unreadCount = inbox.filter(m => !m.lu).length;
-  document.getElementById('content').innerHTML = `
+  container.innerHTML = `
     <div class="page-header">
       <div><div class="page-title">💬 Messagerie</div><div class="page-sub">${unreadCount ? unreadCount + ' message(s) non lu(s)' : 'Tous les messages lus'}</div></div>
       <button class="btn btn-primary" onclick="openNewMessage()"><i class="fas fa-pen"></i> Nouveau message</button>

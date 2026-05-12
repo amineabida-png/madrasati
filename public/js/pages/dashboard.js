@@ -37,7 +37,7 @@ async function renderDashboard(container) {
         <div>
           <div class="stat-val">${stats.facturesImpayees}</div>
           <div class="stat-label">Factures impayées</div>
-          <div style="font-size:11px;color:var(--danger);font-weight:600;">${formatMoney(stats.montantImpaye)}</div>
+          <div style="font-size:11px;color:var(--danger);font-weight:600;">${formatMoney(stats.totalImpaye)}</div>
         </div>
       </div>
       <div class="stat-card">
