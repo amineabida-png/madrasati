@@ -106,11 +106,17 @@ app.get('/api/niveaux', authMiddleware, async (req, res) => {
 // ─── ÉLÈVES ──────────────────────────────────────────────────────────────────
 app.get('/api/eleves', authMiddleware, async (req, res) => {
   const eid = req.user.ecole_id || 1;
-  const rows = await query(`SELECT e.*, u.nom, u.prenom, u.email, u.telephone, u.actif,
+  const { classe_id, statut } = req.query;
+  let sql = `SELECT e.*, u.nom, u.prenom, u.email, u.telephone, u.actif, u.date_naissance, u.adresse,
     c.nom as classe_nom, pu.nom as parent_nom, pu.prenom as parent_prenom, pu.telephone as parent_tel
     FROM eleves e JOIN users u ON e.user_id=u.id LEFT JOIN classes c ON e.classe_id=c.id LEFT JOIN users pu ON e.parent_id=pu.id
-    WHERE u.ecole_id=? ORDER BY u.nom`, [eid]);
-  res.json(rows);
+    WHERE u.ecole_id=?`;
+  const params = [eid];
+  if (classe_id) { sql += ' AND e.classe_id=?'; params.push(classe_id); }
+  if (statut) { sql += ' AND e.statut=?'; params.push(statut); }
+  else { sql += ' AND e.statut="actif"'; }
+  sql += ' ORDER BY u.nom';
+  res.json(await query(sql, params));
 });
 
 app.post('/api/eleves', authMiddleware, requireRole('admin', 'super'), async (req, res) => {
@@ -123,6 +129,15 @@ app.post('/api/eleves', authMiddleware, requireRole('admin', 'super'), async (re
   const mat = 'MAT-' + new Date().getFullYear() + '-' + String(userRes.lastInsertRowid).padStart(3,'0');
   await run('INSERT INTO eleves (user_id, classe_id, numero_matricule, parent_id, date_inscription) VALUES (?,?,?,?,date("now"))', [userRes.lastInsertRowid, classe_id, mat, parent_id]);
   res.json({ ok: true });
+});
+
+app.get('/api/eleves/:id', authMiddleware, async (req, res) => {
+  const rows = await query(`SELECT e.*, u.nom, u.prenom, u.email, u.telephone, u.actif, u.date_naissance, u.adresse,
+    c.nom as classe_nom, pu.nom as parent_nom, pu.prenom as parent_prenom, pu.telephone as parent_tel
+    FROM eleves e JOIN users u ON e.user_id=u.id LEFT JOIN classes c ON e.classe_id=c.id LEFT JOIN users pu ON e.parent_id=pu.id
+    WHERE e.id=?`, [req.params.id]);
+  if (!rows.length) return res.status(404).json({ error: 'Élève non trouvé' });
+  res.json(rows[0]);
 });
 
 app.put('/api/eleves/:id', authMiddleware, requireRole('admin', 'super'), async (req, res) => {
@@ -162,6 +177,16 @@ app.post('/api/profs', authMiddleware, requireRole('admin', 'super'), async (req
   const userRes = await run('INSERT INTO users (ecole_id, nom, prenom, email, password, role, telephone) VALUES (?,?,?,?,?,?,?)', [eid, nom, prenom, email, hashed, 'prof', telephone]);
   await run('INSERT INTO profs (user_id, specialite, cin, date_embauche, salaire) VALUES (?,?,?,?,?)', [userRes.lastInsertRowid, specialite, cin, date_embauche, salaire]);
   res.json({ ok: true });
+});
+
+app.get('/api/profs/:id', authMiddleware, async (req, res) => {
+  const rows = await query(`SELECT p.*, u.nom, u.prenom, u.email, u.telephone, u.actif,
+    GROUP_CONCAT(m.nom) as matieres_noms
+    FROM profs p JOIN users u ON p.user_id=u.id
+    LEFT JOIN prof_matieres pm ON pm.prof_id=p.id LEFT JOIN matieres m ON m.id=pm.matiere_id
+    WHERE p.id=? GROUP BY p.id`, [req.params.id]);
+  if (!rows.length) return res.status(404).json({ error: 'Prof non trouvé' });
+  res.json(rows[0]);
 });
 
 app.put('/api/profs/:id', authMiddleware, requireRole('admin', 'super'), async (req, res) => {
@@ -353,6 +378,50 @@ app.get('/api/factures/stats/summary', authMiddleware, async (req, res) => {
   const summary = await query(`SELECT SUM(f.montant) as total_emis, SUM(f.montant_paye) as total_paye, SUM(f.montant-f.montant_paye) as total_impaye, COUNT(*) as nb_total, SUM(CASE WHEN f.statut='payee' THEN 1 ELSE 0 END) as nb_payees, SUM(CASE WHEN f.statut='impayee' THEN 1 ELSE 0 END) as nb_impayees, SUM(CASE WHEN f.statut='partielle' THEN 1 ELSE 0 END) as nb_partielles FROM factures f JOIN eleves e ON f.eleve_id=e.id JOIN users u ON e.user_id=u.id WHERE u.ecole_id=? AND f.statut != 'annulee'`, [eid]);
   res.json(summary[0]);
 });
+
+app.get('/api/factures/:id', authMiddleware, async (req, res) => {
+  const rows = await query(`SELECT f.*, u.nom, u.prenom, u.telephone, u.adresse, c.nom as classe_nom, e.numero_matricule
+    FROM factures f JOIN eleves e ON f.eleve_id=e.id JOIN users u ON e.user_id=u.id LEFT JOIN classes c ON e.classe_id=c.id
+    WHERE f.id=?`, [req.params.id]);
+  if (!rows.length) return res.status(404).json({ error: 'Facture non trouvée' });
+  const facture = rows[0];
+  facture.paiements = await query('SELECT * FROM paiements WHERE facture_id=? ORDER BY date_paiement DESC', [req.params.id]);
+  res.json(facture);
+});
+
+// ─── BULLETIN ────────────────────────────────────────────────────────────────
+app.get('/api/bulletin/:eleveId/:periodeId', authMiddleware, async (req, res) => {
+  const { eleveId, periodeId } = req.params;
+  const eleveRows = await query(`SELECT e.*, u.nom, u.prenom, c.nom as classe_nom, e.numero_matricule
+    FROM eleves e JOIN users u ON e.user_id=u.id LEFT JOIN classes c ON e.classe_id=c.id WHERE e.id=?`, [eleveId]);
+  if (!eleveRows.length) return res.status(404).json({ error: 'Élève non trouvé' });
+  const periodeRows = await query('SELECT * FROM periodes WHERE id=?', [periodeId]);
+  const notes = await query(`SELECT n.*, m.nom as matiere, m.coefficient FROM notes n
+    JOIN matieres m ON n.matiere_id=m.id WHERE n.eleve_id=? AND n.periode_id=? ORDER BY m.nom`, [eleveId, periodeId]);
+  // Calculer moyenne par matière
+  const matiereMap = {};
+  notes.forEach(n => {
+    if (!matiereMap[n.matiere_id]) matiereMap[n.matiere_id] = { matiere: n.matiere, coefficient: n.coefficient, notes: [] };
+    matiereMap[n.matiere_id].notes.push(n.valeur / n.sur * 20);
+  });
+  const notesSummary = Object.values(matiereMap).map(m => ({
+    matiere: m.matiere, coefficient: m.coefficient,
+    moyenne: m.notes.reduce((s, v) => s + v, 0) / m.notes.length
+  }));
+  let totalPts = 0, totalCoeff = 0;
+  notesSummary.forEach(n => { totalPts += n.moyenne * n.coefficient; totalCoeff += n.coefficient; });
+  const moyenneGen = totalCoeff > 0 ? Math.round((totalPts / totalCoeff) * 100) / 100 : 0;
+  const presences = await query(`SELECT statut, COUNT(*) as total FROM presences WHERE eleve_id=? GROUP BY statut`, [eleveId]);
+  res.json({ eleve: eleveRows[0], periode: periodeRows[0] || null, notes: notesSummary, moyenneGen, presences });
+});
+
+// ─── PRESENCES STATS ─────────────────────────────────────────────────────────
+app.get('/api/presences/stats/:eleveId', authMiddleware, async (req, res) => {
+  const stats = await query(`SELECT statut, COUNT(*) as total FROM presences WHERE eleve_id=? GROUP BY statut`, [req.params.eleveId]);
+  res.json(stats);
+});
+
+
 
 // ─── ANNONCES ────────────────────────────────────────────────────────────────
 app.get('/api/annonces', authMiddleware, async (req, res) => {

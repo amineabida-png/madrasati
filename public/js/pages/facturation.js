@@ -129,7 +129,7 @@ async function saveFacture() {
   if (!data.eleve_id) return toast('Sélectionnez un élève','error');
   if (!data.description) return toast('Description requise','error');
   if (isNaN(data.montant)||data.montant<=0) return toast('Montant invalide','error');
-  try { loading(true); const r=await API.post('/api/factures',data); loading(false); closeModal(); toast(`Facture ${r.numero} créée`); showPage('facturation'); }
+  try { loading(true); await API.post('/api/factures',data); loading(false); closeModal(); toast('Facture créée avec succès'); showPage('facturation'); }
   catch(err) { loading(false); toast(err.message,'error'); }
 }
 

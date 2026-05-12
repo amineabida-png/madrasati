@@ -205,7 +205,7 @@ async function genererBulletin() {
         <div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;">
           <div style="flex:1;min-width:180px;padding:20px;background:${moyenneGen>=10?'#d1fae5':'#fee2e2'};border-radius:10px;text-align:center;">
             <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);">Moyenne Générale</div>
-            <div style="font-size:36px;font-weight:900;color:${noteColor(moyenneGen)};margin:8px 0;">${moyenneGen}/20</div>
+            <div style="font-size:36px;font-weight:900;color:${noteColor(moyenneGen)};margin:8px 0;">${moyenneGen.toFixed(2)}/20</div>
             <div style="font-weight:700;color:${noteColor(moyenneGen)};">${getMention(moyenneGen)}</div>
           </div>
           <div style="flex:1;min-width:180px;padding:20px;background:var(--bg);border-radius:10px;">
