@@ -1,19 +1,18 @@
-window.renderEmploi = async function() {
-  const token = localStorage.getItem('token');
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+window.renderEmploi = async function(container) {
+  if (!container) container = document.getElementById('content');
   const [classes, profs, matieres] = await Promise.all([
-    fetch('/api/classes', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json()),
-    fetch('/api/profs', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json()),
-    fetch('/api/matieres', { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json()),
+    API.get('/api/classes'),
+    API.get('/api/profs'),
+    API.get('/api/matieres'),
   ]);
 
-  const isAdmin = ['admin','super'].includes(user.role);
+  const isAdmin = ['admin','super'].includes(currentUser.role);
   const defaultClass = classes[0]?.id || '';
 
-  document.getElementById('content').innerHTML = `
+  container.innerHTML = `
     <div class="page-header">
       <div><div class="page-title">📅 Emploi du temps</div><div class="page-sub">Planning hebdomadaire</div></div>
-      ${isAdmin ? `<button class="btn btn-primary" onclick="openAddCours(${JSON.stringify({classes,profs,matieres}).replace(/"/g,'&quot;')})"><i class="fas fa-plus"></i> Ajouter un cours</button>` : ''}
+      ${isAdmin ? `<button class="btn btn-primary" onclick="openAddCours()"><i class="fas fa-plus"></i> Ajouter un cours</button>` : ''}
     </div>
     <div class="filter-bar">
       <select id="et-classe" class="form-select" onchange="loadEmploiTable()">
@@ -30,43 +29,38 @@ window.renderEmploi = async function() {
       <div style="display:flex;justify-content:center;padding:40px;"><div class="loader"></div></div>
     </div>`;
 
-  // Auto-load first class
-  if (defaultClass) {
-    document.getElementById('et-classe').value = defaultClass;
-  }
+  window._emploiClasses = classes;
+  window._emploiProfs = profs;
+  window._emploiMatieres = matieres;
+
+  if (defaultClass) document.getElementById('et-classe').value = defaultClass;
   loadEmploiTable();
 };
 
 window.loadEmploiTable = async function() {
-  const token = localStorage.getItem('token');
   const classeId = document.getElementById('et-classe')?.value;
   const profId = document.getElementById('et-prof')?.value;
   let url = '/api/emploi?';
   if (classeId) url += 'classe_id=' + classeId + '&';
   if (profId) url += 'prof_id=' + profId + '&';
-  const cours = await fetch(url, { headers: { Authorization: 'Bearer ' + token } }).then(r => r.json());
+  const cours = await API.get(url);
 
   const jours = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-  // Collect unique time slots
   const times = [...new Set(cours.map(c => c.heure_debut + '-' + c.heure_fin))].sort();
-
   const container = document.getElementById('et-grid-container');
+  const isAdmin = ['admin','super'].includes(currentUser.role);
 
   if (!cours.length) {
     container.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><h3>Aucun cours programmé</h3><p>Ajoutez des cours en cliquant sur "+ Ajouter un cours"</p></div>';
     return;
   }
 
-  // Build grid map: day -> time -> cours
   const grid = {};
   cours.forEach(c => {
     const key = c.jour + '||' + c.heure_debut + '-' + c.heure_fin;
     if (!grid[key]) grid[key] = [];
     grid[key].push(c);
   });
-
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const isAdmin = ['admin','super'].includes(user.role);
 
   container.innerHTML = `
     <div style="overflow-x:auto;" id="timetable-print">
@@ -94,7 +88,7 @@ window.loadEmploiTable = async function() {
                       <div style="font-weight:800; margin-bottom:2px;">${c.matiere_nom}</div>
                       <div style="opacity:0.85;">${c.prof_prenom} ${c.prof_nom}</div>
                       ${c.salle ? `<div style="opacity:0.7; font-size:10px;">📍 ${c.salle}</div>` : ''}
-                      ${c.classe_nom && !document.getElementById('et-classe')?.value ? `<div style="opacity:0.7; font-size:10px;">🏫 ${c.classe_nom}</div>` : ''}
+                      ${c.classe_nom && !classeId ? `<div style="opacity:0.7; font-size:10px;">🏫 ${c.classe_nom}</div>` : ''}
                       ${isAdmin ? `<button onclick="deleteCours(${c.id})" style="margin-top:4px; background:rgba(0,0,0,0.2); border:none; border-radius:4px; color:white; font-size:10px; padding:2px 6px; cursor:pointer;">✕ Supprimer</button>` : ''}
                     </div>`).join('')}
                 </td>`;
@@ -112,10 +106,12 @@ window.loadEmploiTable = async function() {
     </div>`;
 };
 
-window.openAddCours = function(data) {
-  const { classes, profs, matieres } = data;
+window.openAddCours = function() {
+  const classes = window._emploiClasses || [];
+  const profs = window._emploiProfs || [];
+  const matieres = window._emploiMatieres || [];
   const jours = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-  showModal(`
+  modal(`
     <div class="modal-header">
       <span class="modal-title">➕ Ajouter un cours</span>
       <button onclick="closeModal()" class="btn btn-outline btn-sm btn-icon"><i class="fas fa-times"></i></button>
@@ -124,16 +120,19 @@ window.openAddCours = function(data) {
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Classe *</label>
           <select id="c-classe" class="form-select">
+            <option value="">Choisir...</option>
             ${classes.map(c => `<option value="${c.id}">${c.nom}</option>`).join('')}
           </select>
         </div>
         <div class="form-group"><label class="form-label">Matière *</label>
           <select id="c-matiere" class="form-select">
+            <option value="">Choisir...</option>
             ${matieres.map(m => `<option value="${m.id}">${m.nom}</option>`).join('')}
           </select>
         </div>
         <div class="form-group"><label class="form-label">Enseignant *</label>
           <select id="c-prof" class="form-select">
+            <option value="">Choisir...</option>
             ${profs.map(p => `<option value="${p.id}">${p.prenom} ${p.nom}</option>`).join('')}
           </select>
         </div>
@@ -160,7 +159,6 @@ window.openAddCours = function(data) {
 };
 
 window.saveCours = async function() {
-  const token = localStorage.getItem('token');
   const body = {
     classe_id: document.getElementById('c-classe').value,
     matiere_id: document.getElementById('c-matiere').value,
@@ -170,25 +168,28 @@ window.saveCours = async function() {
     heure_fin: document.getElementById('c-fin').value,
     salle: document.getElementById('c-salle').value,
   };
+  if (!body.classe_id) return toast('Choisissez une classe', 'error');
+  if (!body.matiere_id) return toast('Choisissez une matière', 'error');
+  if (!body.prof_id) return toast('Choisissez un enseignant', 'error');
   if (!body.heure_debut || !body.heure_fin) return toast('Horaires requis', 'error');
-  if (body.heure_debut >= body.heure_fin) return toast("L'heure de fin doit être après l'heure de début", 'error');
-  const r = await fetch('/api/emploi', {
-    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-    body: JSON.stringify(body)
-  });
-  const d = await r.json();
-  if (!r.ok) return toast(d.error || 'Erreur', 'error');
-  toast('Cours ajouté !', 'success');
-  closeModal();
-  loadEmploiTable();
+  if (body.heure_debut >= body.heure_fin) return toast("L'heure de fin doit être après le début", 'error');
+  try {
+    loading(true);
+    await API.post('/api/emploi', body);
+    loading(false);
+    toast('Cours ajouté !');
+    closeModal();
+    loadEmploiTable();
+  } catch(err) { loading(false); toast(err.message, 'error'); }
 };
 
 window.deleteCours = async function(id) {
   if (!confirm('Supprimer ce cours ?')) return;
-  const token = localStorage.getItem('token');
-  await fetch('/api/emploi/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + token } });
-  toast('Cours supprimé', 'success');
-  loadEmploiTable();
+  try {
+    await API.delete('/api/emploi/' + id);
+    toast('Cours supprimé');
+    loadEmploiTable();
+  } catch(err) { toast(err.message, 'error'); }
 };
 
 window.printTimetable = function() {
