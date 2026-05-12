@@ -1,4 +1,4 @@
-const CACHE = 'madrasati-v6';
+const CACHE = 'madrasati-v7';
 const ASSETS = ['/', '/index.html', '/js/app.js', '/js/api.js', '/js/utils.js'];
 
 self.addEventListener('install', e => {

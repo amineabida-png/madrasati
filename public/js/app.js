@@ -274,9 +274,7 @@ document.getElementById('login-form').addEventListener('submit', async e => {
 });
 
 window.loginDemo = async function() {
-  document.getElementById('login-email').value = 'demo@madrasati.ma';
-  document.getElementById('login-password').value = 'eleve123';
-  document.getElementById('login-form').dispatchEvent(new Event('submit'));
+  toast('Aucun compte démo disponible', 'error');
 };
 
 window.logout = async function() {
@@ -290,28 +288,19 @@ window.logout = async function() {
 // ── INIT ──────────────────────────────────────────────────────────────────────
 function initApp(user) {
   APP.user = user;
-  window.currentUser = user; // alias global utilisé par toutes les pages
+  window.currentUser = user;
   document.getElementById('login-page').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   document.getElementById('sidebar-avatar').textContent = (user.prenom?.[0] || '') + (user.nom?.[0] || '');
   document.getElementById('sidebar-username').textContent = user.prenom + ' ' + user.nom;
   document.getElementById('sidebar-role').textContent = { super:'Super Admin', admin:'Administrateur', prof:'Enseignant', eleve:'Élève', parent:'Parent' }[user.role] || user.role;
   buildNav(user.role);
-  // Show change-pwd button only for non-demo
-  if (user.email !== 'demo@madrasati.ma') {
-    document.getElementById('change-pwd-btn').style.display = 'flex';
-  }
-  // Show admin btn for super
+  // Bouton changer mot de passe (tous les utilisateurs)
+  document.getElementById('change-pwd-btn').style.display = 'flex';
+  // Bouton panel super admin
   if (user.role === 'super') {
     document.getElementById('admin-btn').style.display = 'flex';
   }
-  // Trial banner
-  fetch('/api/trial').then(r => r.json()).then(info => {
-    if (info.active && !info.unlimited) {
-      document.getElementById('trial-banner').style.display = 'block';
-      document.getElementById('trial-countdown').textContent = info.hoursLeft + 'h';
-    }
-  });
   // Start polling notifications every 30s
   loadNotifCount();
   APP.notifInterval = setInterval(loadNotifCount, 30000);

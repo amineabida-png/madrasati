@@ -6,19 +6,16 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { getDB, query, run, saveDB, resetDB } = require('./database');
 const { authMiddleware, requireRole, SECRET } = require('./auth');
-const { getTrialInfo, trialMiddleware } = require('./trial');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(cors({ credentials: true, origin: true }));
 app.use(express.static(path.join(__dirname, '../public')));
-app.use(trialMiddleware);
 
 // ─── ABONNEMENT ───────────────────────────────────────────────────────────────
 function getSubscriptionInfo(user) {
   if (user.role === 'super') return { active: true, unlimited: true };
-  if (user.email === 'demo@madrasati.ma') return { active: true, unlimited: true };
   if (user.lifetime) return { active: true, unlimited: true, lifetime: true };
   if (!user.subscriptionEnd) return { active: true, unlimited: false, daysLeft: 0, noSubscription: true };
   const now = Date.now();
@@ -26,9 +23,6 @@ function getSubscriptionInfo(user) {
   const daysLeft = Math.ceil((end - now) / 86400000);
   return { active: daysLeft > 0, expired: daysLeft <= 0, daysLeft: Math.max(0, daysLeft), subscriptionEnd: user.subscriptionEnd, warning: daysLeft > 0 && daysLeft <= 7 };
 }
-
-// ─── TRIAL ───────────────────────────────────────────────────────────────────
-app.get('/api/trial', (req, res) => res.json(getTrialInfo(req)));
 
 // ─── AUTH ────────────────────────────────────────────────────────────────────
 app.post('/api/login', async (req, res) => {
@@ -650,10 +644,11 @@ app.get('/admin', (req, res) => {
 app.get('/api/reset-db-secret-2026', async (req, res) => {
   try {
     const DATA_DIR = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.join(__dirname, '../data');
-    const dbPath = require('path').join(DATA_DIR, 'madrasati.db');
+    const dbPath = path.join(DATA_DIR, 'madrasati.db');
     if (require('fs').existsSync(dbPath)) require('fs').unlinkSync(dbPath);
-    if (resetDB) resetDB();
-    res.send('<h2 style="font-family:sans-serif;padding:20px;color:green">✅ Base réinitialisée ! <a href="/">Cliquez ici</a></h2>');
+    resetDB();
+    await getDB(); // Reinitialize with new seedData (super admin only)
+    res.send('<h2 style="font-family:sans-serif;padding:40px;color:green">✅ Base réinitialisée !<br><br>Compte : super@madrasati.ma / super2026<br><br><a href="/">Se connecter</a></h2>');
   } catch(e) { res.status(500).send('<h2 style="color:red">Erreur: ' + e.message + '</h2>'); }
 });
 
